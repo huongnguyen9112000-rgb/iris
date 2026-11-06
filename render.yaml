@@ -2,6 +2,6 @@ services:
   - type: web
     name: iris-svm-api
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python train.py
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health

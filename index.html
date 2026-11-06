@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris - Nhận diện loài hoa</title>
+<meta name="description" content="Nhập bốn số đo của một bông diên vĩ, mô hình học máy cho biết đó là loài nào.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#ECEAF4; --surface:#FBFAFE; --ink:#26223F; --muted:#67637F; --line:#DAD6EA; --soft:#F2F0F9;
+  --setosa:#6A55F0; --setosa-ink:#4433BF; --setosa-tint:#E6E2FD;
+  --versicolor:#1AA394; --versicolor-ink:#0D6B60; --versicolor-tint:#D8F0EC;
+  --virginica:#E0487F; --virginica-ink:#B01F5A; --virginica-tint:#FBDCE7;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --c:#8E8AAB; --c-ink:#4A4668; --c-tint:#E9E7F3;
+}
+[data-species=setosa]{--c:var(--setosa);--c-ink:var(--setosa-ink);--c-tint:var(--setosa-tint)}
+[data-species=versicolor]{--c:var(--versicolor);--c-ink:var(--versicolor-ink);--c-tint:var(--versicolor-tint)}
+[data-species=virginica]{--c:var(--virginica);--c-ink:var(--virginica-ink);--c-tint:var(--virginica-tint)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--setosa);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 64px}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px;padding:36px 0 20px}
+.brand h1{font:italic 500 40px/1 var(--serif);letter-spacing:-.02em;margin:0 0 8px}
+.brand p{margin:0;color:var(--muted);max-width:44ch}
+.picker{display:flex;flex-direction:column;gap:4px;min-width:220px}
+.picker label{font-size:14px;color:var(--muted)}
+select{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2367637F' stroke-width='1.8'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;border:1px solid var(--line);border-radius:12px;padding:11px 40px 11px 14px;cursor:pointer}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
+.tab{background:none;border:0;padding:12px 16px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+[hidden]{display:none!important}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px}
+.card h2{font:500 22px/1.2 var(--serif);margin:0 0 4px;letter-spacing:-.01em}
+.card .sub{margin:0 0 18px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+.stack{display:grid;gap:20px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* stage */
+.stage{background:var(--c-tint);border-color:transparent;transition:background-color .5s}
+.stage svg{display:block;width:100%;max-width:420px;margin:0 auto;height:auto}
+.fall{fill:var(--c);transition:fill .5s;stroke:var(--c-ink);stroke-opacity:.35;stroke-width:1}
+.std{fill:color-mix(in srgb,var(--c) 42%,#fff);transition:fill .5s;stroke:var(--c-ink);stroke-opacity:.4;stroke-width:1}
+.patch{fill:#F4C95D}
+.hub{fill:#fff;opacity:.9}
+.cap{text-align:center;font-size:13px;color:var(--c-ink);margin:6px 0 0;opacity:.85}
+.result{margin-top:18px;text-align:center}
+.card .species{font:italic 500 46px/1.05 var(--serif);letter-spacing:-.02em;color:var(--c-ink);margin:0;transition:color .5s}
+.card .species small{font:400 20px var(--serif);font-style:normal;color:var(--muted);margin-right:6px}
+.conf{margin:6px 0 0;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;background:rgba(255,255,255,.65);border-radius:99px;padding:4px 10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.dot.setosa{background:var(--setosa)}.dot.versicolor{background:var(--versicolor)}.dot.virginica{background:var(--virginica)}
+.agree{margin:12px 0 0;font-size:14px;color:var(--ink)}
+.warn{margin:14px 0 0;padding:10px 12px;background:#FFF4D6;border-radius:12px;font-size:14px;color:#6B4E00;text-align:left}
+.probs{margin-top:18px;display:grid;gap:8px;text-align:left}
+.prob{display:grid;grid-template-columns:92px 1fr 52px;align-items:center;gap:10px;font-size:14px}
+.prob i{font-family:var(--serif)}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.7);overflow:hidden}
+.bar b{display:block;height:100%;border-radius:99px;width:0;transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.prob em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+
+/* controls */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:500;transition:background-color .15s,border-color .15s}
+.btn:hover{background:var(--soft);border-color:#C6C1DD}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#3A3560}
+.btn.sm{padding:5px 11px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:default}
+.row{padding:14px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0;padding-top:0}
+.row-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+.row-top label{font-weight:500}
+.row-top label span{color:var(--muted);font-weight:400;font-size:14px;margin-left:6px}
+.num{display:flex;align-items:baseline;gap:4px}
+.num input{width:68px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums}
+.num span{color:var(--muted);font-size:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(to right,var(--c) var(--pct,50%),var(--line) var(--pct,50%))}
+input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:99px;background:var(--c)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--c-ink);margin-top:-8px;transition:border-color .5s}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--c-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px;border-top:1px solid var(--line);padding-top:18px}
+.toast{font-size:14px;color:var(--muted);min-height:1.5em}
+
+/* map */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.mapbox{position:relative}
+canvas{display:block;width:100%;border-radius:14px;background:var(--soft)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-130%)}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+
+/* history */
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.hist li{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer}
+.hist li:hover{background:var(--soft)}
+.hist .sp{font-family:var(--serif);font-style:italic;min-width:86px}
+.hist .vals{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;flex:1}
+.hist time{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+
+/* models tab */
+.mlist{display:grid;gap:8px}
+.mrow{display:grid;grid-template-columns:1fr 150px;gap:6px 16px;align-items:center;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer}
+.mrow:hover{border-color:#BDB7D8}
+.mrow[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.mrow b{font-weight:600}
+.mrow small{display:block;color:var(--muted);font-size:13.5px;line-height:1.4;margin-top:2px}
+.acc{text-align:right}
+.acc strong{font:500 24px var(--serif);font-variant-numeric:tabular-nums}
+.acc .bar{background:var(--line);margin-top:4px}
+.acc .bar b{background:var(--ink)}
+.cm{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:14px;margin-top:6px}
+.cm .h{color:var(--muted);text-align:center;font-size:13px;padding:2px}
+.cm .h.l{text-align:right;padding-right:8px;align-self:center;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink)}
+.cm .cell{aspect-ratio:1.5;display:grid;place-items:center;border-radius:10px;font:500 20px var(--serif);font-variant-numeric:tabular-nums}
+.imp{display:grid;gap:10px;margin-top:6px}
+.imp div{display:grid;grid-template-columns:130px 1fr 44px;gap:10px;align-items:center;font-size:14px}
+.imp .bar{background:var(--line)}.imp .bar b{background:var(--setosa-ink);width:var(--w)}
+.imp em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+.axis-tag{font-size:13px;color:var(--muted);margin:0}
+
+/* batch */
+textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 14px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.sum{display:flex;flex-wrap:wrap;gap:8px 24px;margin:4px 0 16px}
+.sum div{display:flex;flex-direction:column}
+.sum strong{font:500 28px/1.1 var(--serif);font-variant-numeric:tabular-nums}
+.sum span{font-size:13px;color:var(--muted)}
+.twrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap}
+th{font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);background:var(--soft)}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+td i{font-family:var(--serif)}
+.ok{color:var(--versicolor-ink)}.bad{color:var(--virginica-ink)}
+.err{background:#FDE7EC;color:#7A1534;border-radius:14px;padding:14px 16px;font-size:14px;margin:0 0 16px}
+.err button{margin-left:8px}
+.load{color:var(--muted)}
+footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:520px){.brand h1{font-size:34px}.species{font-size:38px}.prob{grid-template-columns:78px 1fr 48px}.mrow{grid-template-columns:1fr}.acc{text-align:left}.imp div{grid-template-columns:100px 1fr 40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Iris</h1>
+      <p>Nhập bốn số đo của một bông diên vĩ, mô hình cho biết đó là loài nào.</p>
+    </div>
+    <div class="picker">
+      <label for="model">Mô hình đang dùng</label>
+      <select id="model" disabled><option>Đang tải...</option></select>
+    </div>
+  </header>
+
+  <div id="error" class="err" hidden role="alert"></div>
+
+  <div class="tabs" role="tablist" aria-label="Chức năng">
+    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true">Dự đoán</button>
+    <button class="tab" role="tab" id="t-models" aria-controls="p-models" aria-selected="false" tabindex="-1">So sánh mô hình</button>
+    <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1">Hàng loạt</button>
+  </div>
+
+  <!-- DỰ ĐOÁN -->
+  <section id="p-predict" role="tabpanel" aria-labelledby="t-predict">
+    <div class="grid" id="predict-root">
+      <div class="card stage">
+        <svg id="flower" viewBox="0 0 400 400" role="img" aria-label="Hình hoa vẽ theo số đo"></svg>
+        <p class="cap">Đài hoa (rủ xuống) và cánh hoa (dựng đứng) được vẽ theo số đo bạn nhập.</p>
+        <div class="result" aria-live="polite">
+          <h2 class="species" id="species"><small>Iris</small>...</h2>
+          <p class="conf" id="conf">Đang khởi động mô hình...</p>
+          <div class="probs" id="probs"></div>
+          <p class="agree" id="agree"></p>
+          <div class="chips" id="chips"></div>
+          <p class="warn" id="warn" hidden></p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h2>Số đo</h2>
+          <p class="sub">Kéo thanh trượt hoặc gõ số trực tiếp. Đơn vị là centimet.</p>
+          <div class="presets" role="group" aria-label="Điền mẫu">
+            <button class="btn" data-preset="setosa">Mẫu setosa</button>
+            <button class="btn" data-preset="versicolor">Mẫu versicolor</button>
+            <button class="btn" data-preset="virginica">Mẫu virginica</button>
+            <button class="btn" id="random">Mẫu thật ngẫu nhiên</button>
+          </div>
+          <div id="sliders"></div>
+          <div class="actions">
+            <button class="btn primary" id="save">Lưu vào lịch sử</button>
+            <span class="toast" id="toast" role="status"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Bản đồ 150 mẫu</h2>
+          <p class="sub">Bốn số đo được nén xuống hai trục. Màu nền là vùng mô hình gán cho từng loài.</p>
+          <p class="legend"><span><i class="dot setosa"></i><i style="font-family:var(--serif)">setosa</i></span><span><i class="dot versicolor"></i><i style="font-family:var(--serif)">versicolor</i></span><span><i class="dot virginica"></i><i style="font-family:var(--serif)">virginica</i></span></p>
+          <div class="mapbox"><canvas id="map" aria-label="Bản đồ các mẫu dữ liệu và vị trí mẫu của bạn"></canvas><div class="tip" id="tip" hidden></div></div>
+          <p class="note" id="mapnote"></p>
+        </div>
+
+        <div class="card">
+          <div class="head-row">
+            <div><h2>Lịch sử</h2><p class="sub">Bấm vào một dòng để nạp lại số đo.</p></div>
+            <button class="btn sm" id="clear" hidden>Xóa lịch sử</button>
+          </div>
+          <ul class="hist" id="hist"></ul>
+          <p class="empty" id="hist-empty">Chưa có mẫu nào. Điều chỉnh số đo rồi chọn Lưu vào lịch sử để so sánh các mẫu trên bản đồ.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MÔ HÌNH -->
+  <section id="p-models" role="tabpanel" aria-labelledby="t-models" hidden>
+    <div class="grid">
+      <div class="card">
+        <h2>Năm mô hình, cùng một bộ dữ liệu</h2>
+        <p class="sub">Độ chính xác đo bằng kiểm định chéo 5 phần: mỗi mẫu được dự đoán bởi mô hình chưa từng thấy nó. Thanh tính từ mốc 85%. Bấm để chọn mô hình dùng ở các tab khác.</p>
+        <div class="mlist" id="mlist"></div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <h2 id="cm-title">Ma trận nhầm lẫn</h2>
+          <p class="sub">Hàng là loài thật, cột là loài mô hình đoán. Ô nằm ngoài đường chéo là dự đoán sai.</p>
+          <div class="cm" id="cm"></div>
+        </div>
+        <div class="card">
+          <h2>Số đo nào quan trọng nhất</h2>
+          <p class="sub">Theo rừng ngẫu nhiên: số đo càng dài thì càng giúp phân biệt loài.</p>
+          <div class="imp" id="imp"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HÀNG LOẠT -->
+  <section id="p-batch" role="tabpanel" aria-labelledby="t-batch" hidden>
+    <div class="card">
+      <h2>Dự đoán nhiều mẫu cùng lúc</h2>
+      <p class="sub">Dán dữ liệu dạng CSV hoặc chọn tệp. Tệp Iris.csv gốc dùng được ngay; nếu có cột nhãn loài, trang sẽ tính độ chính xác.</p>
+      <label for="csv" class="sub" style="display:block;margin-bottom:6px">Dữ liệu (mỗi dòng một mẫu: dài đài, rộng đài, dài cánh, rộng cánh)</label>
+      <textarea id="csv" spellcheck="false" placeholder="sepal_length,sepal_width,petal_length,petal_width&#10;5.1,3.5,1.4,0.2&#10;6.7,3.0,5.2,2.3"></textarea>
+      <div class="tools">
+        <button class="btn primary" id="run">Dự đoán</button>
+        <label class="btn" for="file" style="cursor:pointer">Chọn tệp CSV</label>
+        <input type="file" id="file" accept=".csv,.txt,text/csv" hidden>
+        <button class="btn" id="sample">Điền dữ liệu mẫu</button>
+        <span class="toast" id="btoast" role="status"></span>
+      </div>
+    </div>
+    <div class="card" id="bresult" hidden style="margin-top:20px">
+      <div class="head-row"><h2>Kết quả</h2><button class="btn" id="download">Tải kết quả CSV</button></div>
+      <div class="sum" id="bsum"></div>
+      <div class="twrap"><table id="btable"></table></div>
+      <p class="note" id="bnote"></p>
+    </div>
+  </section>
+
+  <footer>Mô hình học trên bộ dữ liệu Iris kinh điển của Fisher (150 mẫu, 3 loài). Kết quả chỉ đáng tin khi số đo nằm trong phạm vi của dữ liệu này.</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const SP = ['setosa','versicolor','virginica'];
+const FEATS = [
+  {k:'sepal_length', label:'Dài đài hoa', hint:'sepal', min:4.0, max:8.5, short:'Dài đài hoa'},
+  {k:'sepal_width',  label:'Rộng đài hoa', hint:'sepal', min:1.8, max:4.8, short:'Rộng đài hoa'},
+  {k:'petal_length', label:'Dài cánh hoa', hint:'petal', min:0.8, max:7.2, short:'Dài cánh hoa'},
+  {k:'petal_width',  label:'Rộng cánh hoa', hint:'petal', min:0.1, max:2.8, short:'Rộng cánh hoa'},
+];
+const nf1 = new Intl.NumberFormat('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pct = v => nf1.format(v*100) + '%';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs||{})){
+    if (k==='class') e.className = v; else if (k==='text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k,v);
+  }
+  for (const c of kids.flat()) if (c!=null) e.append(c);
+  return e;
+}
+
+const state = {
+  info:null, model:'svm_linear',
+  values:{sepal_length:5.1,sepal_width:3.5,petal_length:1.4,petal_width:0.2},
+  result:null, regions:{}, seq:0, history:[], batch:null
+};
+
+/* ---------- lưu trữ cục bộ ---------- */
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem('iris-history')||'[]'); }catch(e){ return []; } },
+  set(v){ try{ localStorage.setItem('iris-history', JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- gọi API ---------- */
+async function api(path, body){
+  const res = await fetch(path, body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : undefined);
+  if (!res.ok){
+    let msg = 'Lỗi ' + res.status;
+    try{ const j = await res.json(); if (typeof j.detail==='string') msg = j.detail; }catch(e){}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+function showError(msg, retry){
+  const box = $('#error'); box.textContent = msg + ' ';
+  if (retry) box.append(h('button',{class:'btn sm',onclick:retry,text:'Thử lại'}));
+  box.hidden = false;
+}
+const clearError = () => { $('#error').hidden = true; };
+
+/* ---------- tabs ---------- */
+const tabs = [...document.querySelectorAll('.tab')];
+function selectTab(t){
+  tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
+  if (t.id==='t-predict') drawMap();
+}
+tabs.forEach((t,i) => {
+  t.addEventListener('click', () => selectTab(t));
+  t.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key==='ArrowLeft'){
+      const n = tabs[(i + (e.key==='ArrowRight'?1:-1) + tabs.length) % tabs.length]; n.focus(); selectTab(n);
+    }
+  });
+});
+
+/* ---------- bông hoa ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const K = 21;
+const flower = {falls:[], stds:[], disp:null, target:null, raf:0};
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.append(e); return e; }
+function initFlower(){
+  const svg = $('#flower'); svg.textContent = '';
+  const root = el('g',{transform:'translate(200 200)'}, svg);
+  [60,180,300].forEach(a => { const g = el('g',{transform:`rotate(${a})`}, root);
+    flower.falls.push({p:el('path',{class:'fall'},g), s:el('ellipse',{class:'patch'},g)}); });
+  [0,120,240].forEach(a => { const g = el('g',{transform:`rotate(${a})`}, root);
+    flower.stds.push(el('path',{class:'std'},g)); });
+  el('circle',{class:'hub',r:5}, root);
+  flower.disp = vecOf(state.values); flower.target = {...flower.disp};
+}
+const vecOf = v => ({sl:v.sepal_length, sw:v.sepal_width, pl:v.petal_length, pw:v.petal_width});
+function petal(len, wid){
+  const w = wid/1.5;
+  return `M0 0C${w} ${-len*.2} ${w} ${-len*.8} 0 ${-len}C${-w} ${-len*.8} ${-w} ${-len*.2} 0 0Z`;
+}
+function drawFlower(){
+  const d = flower.disp;
+  const fl = d.sl*K, fw = d.sw*K*0.95;
+  const sl = d.pl*K, sw = Math.max(d.pw*K*1.5, 5);
+  flower.falls.forEach(f => {
+    f.p.setAttribute('d', petal(fl, fw));
+    f.s.setAttribute('cy', -fl*.36); f.s.setAttribute('rx', Math.max(fw*.07,2)); f.s.setAttribute('ry', fl*.12);
+  });
+  flower.stds.forEach(p => p.setAttribute('d', petal(sl, sw)));
+}
+function tweenFlower(){
+  flower.target = vecOf(state.values);
+  cancelAnimationFrame(flower.raf);
+  if (reduce){ flower.disp = {...flower.target}; drawFlower(); return; }
+  const step = () => {
+    let done = true;
+    for (const k in flower.target){
+      const diff = flower.target[k] - flower.disp[k];
+      if (Math.abs(diff) > .004){ flower.disp[k] += diff*.25; done = false; } else flower.disp[k] = flower.target[k];
+    }
+    drawFlower();
+    if (!done) flower.raf = requestAnimationFrame(step);
+  };
+  flower.raf = requestAnimationFrame(step);
+}
+
+/* ---------- thanh trượt ---------- */
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const round1 = v => Math.round(v*10)/10;
+function buildSliders(){
+  const box = $('#sliders'); box.textContent = '';
+  FEATS.forEach(f => {
+    const rng = h('input',{type:'range',id:'r-'+f.k,min:f.min,max:f.max,step:'0.1','aria-label':f.label});
+    const num = h('input',{type:'number',id:'n-'+f.k,min:f.min,max:f.max,step:'0.1','aria-label':f.label+' (cm)',inputmode:'decimal'});
+    const set = (v, from) => {
+      v = round1(clamp(v, f.min, f.max));
+      state.values[f.k] = v;
+      rng.value = v; if (from!=='num') num.value = v;
+      rng.style.setProperty('--pct', ((v-f.min)/(f.max-f.min)*100)+'%');
+      changed();
+    };
+    rng.addEventListener('input', () => set(parseFloat(rng.value),'rng'));
+    num.addEventListener('input', () => { const v = parseFloat(num.value.replace(',','.')); if (!isNaN(v)) set(v,'num'); });
+    num.addEventListener('blur', () => { num.value = state.values[f.k]; });
+    f.set = set;
+    box.append(h('div',{class:'row'},
+      h('div',{class:'row-top'},
+        h('label',{for:'r-'+f.k}, f.label, h('span',{text:'('+f.hint+')'})),
+        h('div',{class:'num'}, num, h('span',{text:'cm'}))),
+      rng));
+    f.set(state.values[f.k]);
+  });
+}
+function setValues(arr){
+  FEATS.forEach((f,i) => f.set(arr[i]));
+}
+
+/* ---------- dự đoán ---------- */
+let timer = 0;
+function changed(){
+  tweenFlower();
+  clearTimeout(timer);
+  timer = setTimeout(predict, 140);
+}
+async function predict(){
+  const my = ++state.seq;
+  try{
+    const r = await api('/predict', {...state.values, model:state.model});
+    if (my !== state.seq) return;
+    state.result = r; clearError();
+    renderResult();
+  }catch(e){
+    if (my !== state.seq) return;
+    showError('Không kết nối được máy chủ ('+e.message+'). Gói miễn phí của Render có thể cần khoảng một phút để khởi động lại.', predict);
+  }
+}
+function renderResult(){
+  const r = state.result; if (!r) return;
+  const root = $('#predict-root');
+  root.dataset.species = r.prediction;
+  $('#species').replaceChildren(h('small',{text:'Iris'}), r.prediction);
+  $('#conf').textContent = 'Độ chắc chắn ' + pct(r.confidence);
+  const probs = $('#probs'); probs.textContent = '';
+  SP.forEach(s => {
+    const v = r.probabilities[s];
+    const b = h('b',{style:`background:var(--${s});width:${v*100}%`});
+    probs.append(h('div',{class:'prob'}, h('i',{text:s}), h('div',{class:'bar'}, b), h('em',{text:pct(v)})));
+  });
+  const a = r.agreement;
+  $('#agree').textContent = a.agree===a.total
+    ? `${a.agree}/${a.total} mô hình cùng kết luận`
+    : `${a.agree}/${a.total} mô hình chọn ${r.prediction}. Các mô hình chưa thống nhất, hãy xem lại số đo.`;
+  const chips = $('#chips'); chips.textContent = '';
+  state.info.models.forEach(m => {
+    const v = a.models[m.id];
+    chips.append(h('span',{class:'chip',title:m.name+': '+v.prediction}, h('i',{class:'dot '+v.prediction}), m.name.replace('SVM ','SVM ')));
+  });
+  const out = [];
+  FEATS.forEach(f => { const [lo,hi] = state.info.ranges[f.k]; const v = state.values[f.k];
+    if (v < lo-.0001 || v > hi+.0001) out.push(`${f.label.toLowerCase()} ${nf1.format(v)} cm (dữ liệu huấn luyện: ${nf1.format(lo)} đến ${nf1.format(hi)} cm)`); });
+  const w = $('#warn');
+  if (out.length){ w.textContent = 'Có số đo nằm ngoài phạm vi dữ liệu huấn luyện: ' + out.join('; ') + '. Kết quả kém tin cậy.'; w.hidden = false; } else w.hidden = true;
+  drawMap();
+}
+
+/* ---------- bản đồ ---------- */
+const map = {cv:$('#map'), hover:null};
+async function ensureRegions(){
+  if (state.regions[state.model]) return state.regions[state.model];
+  try{ state.regions[state.model] = await api('/api/regions?model='+state.model); }catch(e){ return null; }
+  return state.regions[state.model];
+}
+function toPx(p, b, W, H, pad){
+  return [pad + (p[0]-b[0])/(b[1]-b[0])*(W-2*pad), H - pad - (p[1]-b[2])/(b[3]-b[2])*(H-2*pad)];
+}
+async function drawMap(){
+  if ($('#p-predict').hidden || !state.info) return;
+  const cv = map.cv, dpr = window.devicePixelRatio||1;
+  const W = cv.clientWidth || 400, H = Math.round(W*0.64);
+  cv.style.height = H+'px'; cv.width = W*dpr; cv.height = H*dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const reg = state.regions[state.model];
+  const bounds = reg ? reg.bounds : state.info.bounds;
+  const col = SP.map(s => css('--'+s)), ink = SP.map(s => css('--'+s+'-ink'));
+  if (reg){
+    const cw = W/reg.nx, ch = H/reg.ny; g.globalAlpha = .17;
+    for (let j=0;j<reg.ny;j++) for (let i=0;i<reg.nx;i++){
+      g.fillStyle = col[+reg.cells[j*reg.nx+i]];
+      g.fillRect(i*cw, H-(j+1)*ch, cw+.6, ch+.6);
+    }
+    g.globalAlpha = 1;
+  } else ensureRegions().then(r => r && drawMap());
+  map.pts = state.info.samples.map(s => ({s, xy:toPx(s.p,bounds,W,H,0)}));
+  map.pts.forEach(({s,xy}) => { g.beginPath(); g.arc(xy[0],xy[1],3.6,0,7); g.fillStyle = col[s.s]; g.fill(); g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke(); });
+  state.history.forEach(it => { if (!it.p) return; const xy = toPx(it.p,bounds,W,H,0);
+    g.beginPath(); g.arc(xy[0],xy[1],5.5,0,7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 2.2; g.strokeStyle = ink[SP.indexOf(it.sp)]; g.stroke(); });
+  if (state.result){
+    const r = state.result, k = r.class_id, xy = toPx(r.pca,bounds,W,H,0);
+    g.beginPath(); g.arc(xy[0],xy[1],17,0,7); g.fillStyle = col[k]; g.globalAlpha = .22; g.fill(); g.globalAlpha = 1;
+    g.beginPath(); g.arc(xy[0],xy[1],7.5,0,7); g.fillStyle = col[k]; g.fill(); g.lineWidth = 3; g.strokeStyle = css('--ink'); g.stroke();
+    g.font = '600 13px '+css('--sans'); const label = 'Mẫu của bạn'; const tw = g.measureText(label).width;
+    let lx = xy[0]+14, ly = xy[1]-14; if (lx+tw > W-4) lx = xy[0]-14-tw; if (ly < 14) ly = xy[1]+24;
+    g.lineWidth = 4; g.strokeStyle = 'rgba(251,250,254,.95)'; g.strokeText(label,lx,ly); g.fillStyle = css('--ink'); g.fillText(label,lx,ly);
+  }
+  $('#mapnote').textContent = `Hai trục giữ ${pct(state.info.explained)} thông tin của bốn số đo. Vòng trắng là các mẫu đã lưu.`;
+}
+map.cv.addEventListener('mousemove', e => {
+  if (!map.pts) return;
+  const b = map.cv.getBoundingClientRect(), x = e.clientX-b.left, y = e.clientY-b.top;
+  let best = null, bd = 100;
+  map.pts.forEach(p => { const d = (p.xy[0]-x)**2 + (p.xy[1]-y)**2; if (d < bd){ bd = d; best = p; } });
+  const tip = $('#tip');
+  if (best){ tip.hidden = false; tip.style.left = best.xy[0]+'px'; tip.style.top = best.xy[1]+'px';
+    tip.textContent = SP[best.s.s] + ': ' + best.s.v.map(v => nf1.format(v)).join(' / '); } else tip.hidden = true;
+});
+map.cv.addEventListener('mouseleave', () => { $('#tip').hidden = true; });
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawMap, 120); });
+
+/* ---------- lịch sử ---------- */
+function renderHistory(){
+  const ul = $('#hist'); ul.textContent = '';
+  const fmt = new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  state.history.forEach(it => {
+    const li = h('li',{tabindex:'0',role:'button','aria-label':'Nạp lại mẫu '+it.sp},
+      h('i',{class:'dot '+it.sp}), h('span',{class:'sp',text:it.sp}),
+      h('span',{class:'vals',text:it.v.map(v => nf1.format(v)).join(' / ')}),
+      h('time',{text:fmt.format(new Date(it.t))}));
+    const load = () => setValues(it.v);
+    li.addEventListener('click', load);
+    li.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); load(); } });
+    ul.append(li);
+  });
+  $('#hist-empty').hidden = state.history.length>0;
+  $('#clear').hidden = state.history.length===0;
+}
+let toastT = 0;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => t.textContent = '', 2600); }
+$('#save').addEventListener('click', () => {
+  if (!state.result) return;
+  state.history.unshift({v:FEATS.map(f => state.values[f.k]), sp:state.result.prediction, p:state.result.pca, t:Date.now()});
+  state.history = state.history.slice(0,12);
+  store.set(state.history); renderHistory(); drawMap(); toast('Đã lưu vào lịch sử');
+});
+$('#clear').addEventListener('click', () => { state.history = []; store.set([]); renderHistory(); drawMap(); toast('Đã xóa lịch sử'); });
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => setValues(state.info.means[b.dataset.preset])));
+$('#random').addEventListener('click', () => {
+  const s = state.info.samples; setValues(s[Math.floor(Math.random()*s.length)].v);
+});
+
+/* ---------- tab mô hình ---------- */
+function renderModels(){
+  const list = $('#mlist'); list.textContent = '';
+  state.info.models.forEach(m => {
+    const b = h('button',{class:'mrow','aria-pressed':m.id===state.model},
+      h('div',{}, h('b',{text:m.name}), h('small',{text:m.desc})),
+      h('div',{class:'acc'}, h('strong',{text:pct(m.cv_mean)}), h('small',{text:'±'+nf1.format(m.cv_std*100)+' điểm %'}), h('div',{class:'bar'}, h('b',{style:`width:${Math.max(4,(m.cv_mean-.85)/.15*100)}%`}))));
+    b.addEventListener('click', () => setModel(m.id));
+    list.append(b);
+  });
+  const m = state.info.models.find(x => x.id===state.model);
+  $('#cm-title').textContent = 'Ma trận nhầm lẫn: ' + m.name;
+  const cm = $('#cm'); cm.textContent = '';
+  cm.append(h('div'));
+  SP.forEach(s => cm.append(h('div',{class:'h',text:'đoán '+s})));
+  m.confusion.forEach((row,i) => {
+    cm.append(h('div',{class:'h l',text:SP[i]}));
+    const tot = row.reduce((a,b) => a+b,0);
+    row.forEach((v,j) => {
+      const ratio = v/tot, good = i===j;
+      const bg = good ? `color-mix(in srgb, var(--${SP[i]}) ${Math.round(ratio*70+8)}%, #fff)` : (v ? `color-mix(in srgb, var(--virginica) ${Math.round(ratio*400+20)}%, #fff)` : 'var(--soft)');
+      cm.append(h('div',{class:'cell',style:`background:${bg};color:${good&&ratio>.5?'#fff':'var(--ink)'}`,text:String(v)}));
+    });
+  });
+  const imp = $('#imp'); imp.textContent = '';
+  const mx = Math.max(...state.info.importance);
+  state.info.importance.map((v,i) => ({v,i})).sort((a,b) => b.v-a.v).forEach(({v,i}) => {
+    imp.append(h('div',{}, h('span',{text:FEATS[i].short}), h('div',{class:'bar'}, h('b',{style:`--w:${v/mx*100}%`})), h('em',{text:pct(v)})));
+  });
+}
+function setModel(id){
+  state.model = id; $('#model').value = id; renderModels(); ensureRegions().then(drawMap); predict();
+  try{ localStorage.setItem('iris-model', id); }catch(e){}
+}
+$('#model').addEventListener('change', e => setModel(e.target.value));
+
+/* ---------- hàng loạt ---------- */
+const reSL=/sepal[\s_\-]*length/i, reSW=/sepal[\s_\-]*width/i, rePL=/petal[\s_\-]*length/i, rePW=/petal[\s_\-]*width/i, reSP=/species|class|label|loai|loài/i;
+function parseTable(text){
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return {rows:[],skipped:0};
+  const delim = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+  const comma = delim !== ',';
+  const cells = lines.map(l => l.split(delim).map(s => s.trim().replace(/^"|"$/g,'')));
+  const num = s => { const v = parseFloat(comma ? s.replace(',','.') : s); return v; };
+  let head = null, body = cells;
+  if (cells[0].some(c => c!=='' && isNaN(num(c)))){ head = cells[0]; body = cells.slice(1); }
+  let idx = [0,1,2,3], spIdx = -1;
+  if (head){
+    const f = [reSL,reSW,rePL,rePW].map(r => head.findIndex(c => r.test(c)));
+    if (f.every(i => i>=0)) idx = f;
+    else { const numeric = head.map((c,i) => i).filter(i => !/^id$/i.test(head[i]) && !reSP.test(head[i])); idx = numeric.slice(0,4); }
+    spIdx = head.findIndex(c => reSP.test(c));
+  } else if (cells[0].length > 4 && isNaN(num(cells[0][cells[0].length-1]))) spIdx = cells[0].length-1;
+  const rows = []; let skipped = 0;
+  body.forEach(r => {
+    const v = idx.map(i => num(r[i]??''));
+    if (v.length<4 || v.some(x => !isFinite(x) || x<=0 || x>20)){ skipped++; return; }
+    const label = spIdx>=0 ? String(r[spIdx]||'').toLowerCase().replace(/^iris[\s_\-]*/,'') : null;
+    rows.push({v, label});
+  });
+  return {rows, skipped};
+}
+$('#sample').addEventListener('click', () => {
+  $('#csv').value = 'sepal_length,sepal_width,petal_length,petal_width\n5.1,3.5,1.4,0.2\n4.9,3.0,1.4,0.2\n7.0,3.2,4.7,1.4\n6.4,3.2,4.5,1.5\n6.3,3.3,6.0,2.5\n5.8,2.7,5.1,1.9\n5.9,3.0,4.2,1.5';
+});
+$('#file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  $('#csv').value = await f.text(); $('#btoast').textContent = 'Đã nạp ' + f.name; e.target.value = '';
+});
+$('#run').addEventListener('click', async () => {
+  const bt = $('#btoast'); const {rows, skipped} = parseTable($('#csv').value);
+  if (!rows.length){ bt.textContent = 'Chưa có dòng hợp lệ. Cần bốn cột số dương: dài đài, rộng đài, dài cánh, rộng cánh.'; return; }
+  const use = rows.slice(0,2000);
+  bt.textContent = 'Đang dự đoán...'; $('#run').disabled = true;
+  try{
+    const r = await api('/predict/batch', {model:state.model, rows:use.map(x => ({sepal_length:x.v[0],sepal_width:x.v[1],petal_length:x.v[2],petal_width:x.v[3]}))});
+    state.batch = use.map((x,i) => ({...x, res:r.results[i]}));
+    renderBatch(skipped, rows.length-use.length); bt.textContent = '';
+  }catch(e){ bt.textContent = 'Không dự đoán được: ' + e.message; }
+  $('#run').disabled = false;
+});
+function renderBatch(skipped, cut){
+  const b = state.batch, withLabel = b.some(x => x.label);
+  const counts = SP.map(s => b.filter(x => x.res.prediction===s).length);
+  const sum = $('#bsum'); sum.textContent = '';
+  sum.append(h('div',{}, h('strong',{text:String(b.length)}), h('span',{text:'mẫu đã dự đoán'})));
+  SP.forEach((s,i) => sum.append(h('div',{}, h('strong',{text:String(counts[i])}), h('span',{text:s}))));
+  const meanConf = b.reduce((a,x) => a+x.res.confidence,0)/b.length;
+  sum.append(h('div',{}, h('strong',{text:pct(meanConf)}), h('span',{text:'độ chắc chắn trung bình'})));
+  if (withLabel){ const lab = b.filter(x => x.label); const ok = lab.filter(x => x.label===x.res.prediction).length;
+    sum.append(h('div',{}, h('strong',{text:pct(ok/lab.length)}), h('span',{text:`khớp nhãn gốc (${ok}/${lab.length})`}))); }
+  const t = $('#btable'); t.textContent = '';
+  const cols = ['#','Dài đài','Rộng đài','Dài cánh','Rộng cánh','Dự đoán','Chắc chắn'].concat(withLabel?['Nhãn gốc']:[]);
+  t.append(h('thead',{}, h('tr',{}, cols.map((c,i) => h('th',{class:(i>=5?'l':''),text:c})))));
+  const tb = h('tbody');
+  b.slice(0,200).forEach((x,i) => {
+    const tds = [h('td',{text:String(i+1)}), ...x.v.map(v => h('td',{text:nf1.format(v)})),
+      h('td',{class:'l'}, h('i',{class:'dot '+x.res.prediction,style:'display:inline-block;margin-right:6px'}), h('i',{text:x.res.prediction})),
+      h('td',{class:'l',text:pct(x.res.confidence)})];
+    if (withLabel){ const same = x.label===x.res.prediction;
+      tds.push(h('td',{class:'l '+(x.label?(same?'ok':'bad'):'')},x.label?(x.label+(same?' (khớp)':' (lệch)')):'')); }
+    tb.append(h('tr',{}, tds));
+  });
+  t.append(tb);
+  const notes = [];
+  if (b.length>200) notes.push('Bảng hiển thị 200 mẫu đầu, tệp tải về có đủ '+b.length+' mẫu.');
+  if (skipped) notes.push(skipped+' dòng bị bỏ qua vì thiếu số hoặc số không hợp lệ.');
+  if (cut>0) notes.push(cut+' dòng vượt giới hạn 2000 mẫu nên chưa được dự đoán.');
+  $('#bnote').textContent = notes.join(' ');
+  $('#bresult').hidden = false; $('#bresult').scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
+}
+$('#download').addEventListener('click', () => {
+  const head = ['sepal_length','sepal_width','petal_length','petal_width','prediction','confidence'];
+  const withLabel = state.batch.some(x => x.label); if (withLabel) head.push('label');
+  const lines = [head.join(',')].concat(state.batch.map(x => [...x.v, x.res.prediction, x.res.confidence].concat(withLabel?[x.label||'']:[]).join(',')));
+  const a = h('a',{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'iris-ket-qua.csv'});
+  document.body.append(a); a.click(); a.remove();
+});
+
+/* ---------- khởi động ---------- */
+async function boot(){
+  try{
+    state.info = await api('/api/info');
+  }catch(e){
+    showError('Không kết nối được máy chủ ('+e.message+'). Gói miễn phí của Render có thể cần khoảng một phút để khởi động lại.', boot);
+    return;
+  }
+  clearError();
+  const sel = $('#model'); sel.textContent = '';
+  state.info.models.forEach(m => sel.append(h('option',{value:m.id,text:m.name})));
+  sel.disabled = false;
+  try{ const saved = localStorage.getItem('iris-model'); if (saved && state.info.models.some(m => m.id===saved)) state.model = saved; else state.model = state.info.default_model; }catch(e){ state.model = state.info.default_model; }
+  sel.value = state.model;
+  state.history = store.get().filter(x => x && Array.isArray(x.v) && x.v.length===4 && SP.includes(x.sp));
+  initFlower(); buildSliders(); renderHistory(); renderModels(); tweenFlower();
+  ensureRegions().then(drawMap);
+  predict();
+}
+boot();
+})();
+</script>
+</body>
+</html>

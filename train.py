@@ -1,13 +1,6 @@
-from sklearn import datasets
-from sklearn.svm import SVC
-import joblib
+import engine
 
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-
-model = SVC(kernel="linear")
-model.fit(X, y)
-
-joblib.dump(model, "svm_model.pkl")
+art = engine.build_and_save()
 print("Model saved!")
+for m in art["meta"]["models"]:
+    print(f"  {m['name']:<24} chính xác {m['cv_mean']*100:.1f}% (±{m['cv_std']*100:.1f})")
