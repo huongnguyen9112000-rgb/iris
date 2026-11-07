@@ -222,29 +222,156 @@ td i{font-family:var(--serif)}
 footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:520px){.brand h1{font-size:34px}.species{font-size:38px}.prob{grid-template-columns:78px 1fr 48px}.mrow{grid-template-columns:1fr}.acc{text-align:left}.imp div{grid-template-columns:100px 1fr 40px}}
+
+/* ================= giao diện nâng cấp ================= */
+:root{
+  color-scheme: light dark;
+  --on-ink:#fff;
+  --brand:linear-gradient(120deg,#6A55F0 0%,#9B52E0 55%,#E0487F 100%);
+  --shadow:0 1px 2px rgba(38,34,63,.05),0 12px 32px -14px rgba(38,34,63,.22);
+  --shadow-hi:0 2px 4px rgba(38,34,63,.06),0 18px 40px -14px rgba(106,85,240,.35);
+  --chip-bg:rgba(255,255,255,.7); --bar-bg:rgba(255,255,255,.75);
+  --warn-bg:#FFF4D6; --warn-ink:#6B4E00; --err-bg:#FDE7EC; --err-ink:#7A1534; --now:#8A6100;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#110F1B; --surface:#1B1829; --ink:#EFEBFB; --muted:#A8A3C6; --line:#332F4B; --soft:#242038;
+    --setosa:#8573FF; --setosa-ink:#B8AEFF; --setosa-tint:#272250;
+    --versicolor:#2DC4B0; --versicolor-ink:#6FE3D3; --versicolor-tint:#12302D;
+    --virginica:#F0598F; --virginica-ink:#FF93B8; --virginica-tint:#3E1D2E;
+    --c-ink:#B8AEFF;
+    --on-ink:#14111F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -14px rgba(0,0,0,.65);
+    --shadow-hi:0 2px 4px rgba(0,0,0,.4),0 18px 40px -14px rgba(133,115,255,.45);
+    --chip-bg:rgba(255,255,255,.09); --bar-bg:rgba(255,255,255,.12);
+    --warn-bg:#3A2F10; --warn-ink:#FFD98A; --err-bg:#401B28; --err-ink:#FFB5C8; --now:#F2C464;
+  }
+  .btn:hover{border-color:#524C7A}
+}
+body{background:
+  radial-gradient(900px 460px at 88% -120px,rgba(106,85,240,.20),transparent 70%),
+  radial-gradient(760px 420px at -8% 4%,rgba(224,72,127,.12),transparent 70%),
+  var(--bg);min-height:100vh}
+.chip{background:var(--chip-bg)} .bar{background:var(--bar-bg)}
+.warn,.badge.mid{background:var(--warn-bg);color:var(--warn-ink)}
+.err{background:var(--err-bg);color:var(--err-ink)}
+.gtask .st.now{color:var(--now)}
+.tip{color:var(--on-ink)}
+
+/* top bar */
+header.top{display:flex;align-items:center;justify-content:space-between;padding:20px 0 4px}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:italic 500 28px/1 var(--serif);letter-spacing:-.02em}
+.adv{position:relative;font-size:14px}
+.adv summary{list-style:none;cursor:pointer;color:var(--muted);padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+.adv summary::-webkit-details-marker{display:none}
+.adv summary:hover{color:var(--ink)}
+.adv .picker{position:absolute;right:0;top:calc(100% + 8px);z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow-hi)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:24px;align-items:center;padding:28px 0 36px}
+.eyebrow{display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:99px;font-size:13px;font-weight:600;color:var(--setosa-ink);background:var(--setosa-tint)}
+.hero h1{font:500 clamp(36px,5.2vw,60px)/1.04 var(--serif);letter-spacing:-.025em;margin:0 0 16px}
+.hero h1 em{font-style:italic;background:var(--brand);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 22px}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.btn.lg{padding:12px 20px;font-size:15px}
+.stats{list-style:none;display:flex;flex-wrap:wrap;gap:12px 32px;margin:28px 0 0;padding:0}
+.stats li{display:flex;flex-direction:column}
+.stats b{font:500 30px/1 var(--serif);letter-spacing:-.02em}
+.stats span{font-size:13px;color:var(--muted);margin-top:4px}
+.hero-art svg{display:block;width:100%;max-width:360px;margin:0 auto;height:auto;filter:drop-shadow(0 22px 30px rgba(106,85,240,.28))}
+@media (prefers-reduced-motion:no-preference){.sway{transform-origin:0 0;animation:sway 9s ease-in-out infinite}@keyframes sway{50%{transform:rotate(6deg)}}}
+@media (max-width:820px){.hero{grid-template-columns:1fr;padding-top:12px}.hero-art{order:-1}.hero-art svg{max-width:230px}}
+
+/* tabs */
+.tabs{position:sticky;top:0;z-index:10;gap:6px;padding:10px 0;margin:0 0 24px;border-bottom:0;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.tab{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid transparent;border-radius:99px;margin:0}
+.tab .ti{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tab:hover{background:var(--soft)}
+.tab[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow)}
+.tab[aria-selected="true"] .ti{stroke:var(--setosa-ink)}
+
+/* cards + buttons */
+.card{border-radius:24px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.card h2{font-size:24px}
+.btn{transition:background-color .15s,border-color .15s,transform .15s,box-shadow .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px rgba(106,85,240,.55)}
+.btn.primary:hover{background:var(--brand);filter:brightness(1.07);box-shadow:var(--shadow-hi)}
+.schips .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:transparent}
+.bub.me{background:var(--brand);color:#fff}
+.stage{background:radial-gradient(420px 300px at 50% 24%,color-mix(in srgb,var(--c) 22%,transparent),transparent 72%),var(--c-tint)}
+.stage svg{max-width:460px;filter:drop-shadow(0 14px 22px color-mix(in srgb,var(--c) 30%,transparent))}
+.card .species{font-size:52px}
+.dx,.plant{box-shadow:var(--shadow)}
+.dx:hover,.plant:hover{box-shadow:var(--shadow-hi)}
+input[type=range]::-webkit-slider-thumb{box-shadow:0 2px 8px rgba(0,0,0,.25)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
+.wrap{padding-bottom:80px}
+@media (max-width:520px){header.top{padding-top:14px}.hero h1{font-size:34px}.lead{font-size:16px}.btn.lg{padding:11px 16px}.card{padding:20px;border-radius:20px}.stats{gap:10px 18px}.stats b{font-size:24px}.stats span{font-size:12px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="brand">
-      <h1>Iris</h1>
-      <p>Nhận diện loài diên vĩ, chẩn đoán bệnh cho cây và hỏi chuyên gia chăm sóc, tất cả trong một nơi.</p>
-    </div>
-    <div class="picker">
-      <label for="model">Mô hình đang dùng</label>
-      <select id="model" disabled><option>Đang tải...</option></select>
-    </div>
+  <header class="top">
+    <a class="logo" href="#" aria-label="Iris, về đầu trang">
+      <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6A55F0"/><stop offset="1" stop-color="#E0487F"/></linearGradient></defs><g transform="translate(20 21)"><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(60)" fill="url(#lg)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(180)" fill="url(#lg)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(300)" fill="url(#lg)"/><path d="M0 0C3 -3 3 -9 0 -13C-3 -9 -3 -3 0 0Z" fill="#fff" fill-opacity=".85"/></g></svg>
+      <span>Iris</span>
+    </a>
+    <details class="adv">
+      <summary>Nâng cao</summary>
+      <div class="picker">
+        <label for="model">Mô hình nhận diện</label>
+        <select id="model" disabled><option>Đang tải...</option></select>
+      </div>
+    </details>
   </header>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero-text">
+      <p class="eyebrow">Bác sĩ cây cảnh cho hoa diên vĩ</p>
+      <h1 id="hero-h">Hiểu cây của bạn,<br><em>chăm đúng cách.</em></h1>
+      <p class="lead">Nhận diện loài, chẩn đoán bệnh qua triệu chứng, hỏi chuyên gia và theo dõi lịch chăm sóc cho từng cây trong vườn.</p>
+      <div class="cta">
+        <button class="btn primary lg" type="button" data-go="t-predict">Nhận diện loài</button>
+        <button class="btn lg" type="button" data-go="t-dx">Chẩn đoán bệnh</button>
+        <button class="btn lg" type="button" data-go="t-chat">Hỏi chuyên gia</button>
+      </div>
+      <ul class="stats" aria-label="Điểm nổi bật">
+        <li><b>3</b><span>loài nhận diện</span></li>
+        <li><b>11</b><span>vấn đề thường gặp</span></li>
+        <li><b>0đ</b><span>dùng miễn phí</span></li>
+      </ul>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 320 320"><defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7C66FF"/><stop offset="1" stop-color="#C13DAE"/></linearGradient>
+        <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2DC4B0"/><stop offset="1" stop-color="#6A55F0"/></linearGradient>
+        <linearGradient id="g3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#E0487F"/><stop offset="1" stop-color="#F6A35C"/></linearGradient></defs>
+        <circle cx="160" cy="160" r="140" fill="url(#g2)" opacity=".13"/>
+        <g transform="translate(160 168)">
+          <g class="sway"><path d="M0 0C46 -22 62 -78 0 -112C-62 -78 -46 -22 0 0Z" transform="rotate(60)" fill="url(#g1)"/>
+          <path d="M0 0C46 -22 62 -78 0 -112C-62 -78 -46 -22 0 0Z" transform="rotate(180)" fill="url(#g1)" opacity=".92"/>
+          <path d="M0 0C46 -22 62 -78 0 -112C-62 -78 -46 -22 0 0Z" transform="rotate(300)" fill="url(#g1)" opacity=".85"/></g>
+          <path d="M0 0C22 -14 26 -52 0 -80C-26 -52 -22 -14 0 0Z" fill="url(#g3)" opacity=".95"/>
+          <path d="M0 0C22 -14 26 -52 0 -80C-26 -52 -22 -14 0 0Z" transform="rotate(120)" fill="url(#g3)" opacity=".9"/>
+          <path d="M0 0C22 -14 26 -52 0 -80C-26 -52 -22 -14 0 0Z" transform="rotate(240)" fill="url(#g3)" opacity=".85"/>
+          <ellipse cx="0" cy="-48" rx="5" ry="14" fill="#FFE08A" transform="rotate(60)"/>
+          <ellipse cx="0" cy="-48" rx="5" ry="14" fill="#FFE08A" transform="rotate(180)"/>
+          <ellipse cx="0" cy="-48" rx="5" ry="14" fill="#FFE08A" transform="rotate(300)"/>
+          <circle r="7" fill="#fff"/></g>
+      </svg>
+    </div>
+  </section>
 
   <div id="error" class="err" hidden role="alert"></div>
 
   <div class="tabs" role="tablist" aria-label="Chức năng">
-    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true">Nhận diện loài</button>
-    <button class="tab" role="tab" id="t-dx" aria-controls="p-dx" aria-selected="false" tabindex="-1">Chẩn đoán bệnh</button>
-    <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1">Hỏi chuyên gia</button>
-    <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1">Vườn của tôi</button>
-    <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1">Hàng loạt</button>
+    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2-3 2-6 0-9-2 3-2 6 0 9ZM12 12c3 0 6 1 8 3-3 1-6 1-8-3ZM12 12c-3 0-6 1-8 3 3 1 6 1 8-3ZM12 12v9"/></svg><span>Nhận diện loài</span></button>
+    <button class="tab" role="tab" id="t-dx" aria-controls="p-dx" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg><span>Chẩn đoán bệnh</span></button>
+    <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Hỏi chuyên gia</span></button>
+    <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7ZM12 14c0-4 3-6 8-6 0 4-3 6-8 6Z"/></svg><span>Vườn của tôi</span></button>
+    <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"/></svg><span>Nhận diện lô hoa</span></button>
   </div>
 
   <!-- DỰ ĐOÁN -->
@@ -344,12 +471,12 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
   <!-- HÀNG LOẠT -->
   <section id="p-batch" role="tabpanel" aria-labelledby="t-batch" hidden>
     <div class="card">
-      <h2>Dự đoán nhiều mẫu cùng lúc</h2>
-      <p class="sub">Dán dữ liệu dạng CSV hoặc chọn tệp. Tệp Iris.csv gốc dùng được ngay; nếu có cột nhãn loài, trang sẽ tính độ chính xác.</p>
+      <h2>Nhận diện cả lô hoa cùng lúc</h2>
+      <p class="sub">Phù hợp cho cửa hàng hoặc vườn ươm: dán bảng số đo của nhiều bông hoa (CSV) hoặc chọn tệp, web sẽ nhận diện loài cho từng bông. Nếu tệp có cột nhãn loài, web đối chiếu và tính tỉ lệ khớp.</p>
       <label for="csv" class="sub" style="display:block;margin-bottom:6px">Dữ liệu (mỗi dòng một mẫu: dài đài, rộng đài, dài cánh, rộng cánh)</label>
       <textarea id="csv" spellcheck="false" placeholder="sepal_length,sepal_width,petal_length,petal_width&#10;5.1,3.5,1.4,0.2&#10;6.7,3.0,5.2,2.3"></textarea>
       <div class="tools">
-        <button class="btn primary" id="run">Dự đoán</button>
+        <button class="btn primary" id="run">Nhận diện cả lô</button>
         <label class="btn" for="file" style="cursor:pointer">Chọn tệp CSV</label>
         <input type="file" id="file" accept=".csv,.txt,text/csv" hidden>
         <button class="btn" id="sample">Điền dữ liệu mẫu</button>
@@ -983,6 +1110,11 @@ $('#g-fromid').addEventListener('click', () => {
   setTimeout(() => { t.textContent = ''; }, 2600);
 });
 function initGarden(){ $('#g-date').value = todayStr(); garden.plants = gstore.get().filter(p => p && p.id && p.every && p.last && p.planted); renderGarden(); }
+
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  selectTab($('#'+b.dataset.go));
+  $('.tabs').scrollIntoView({behavior:reduce?'auto':'smooth', block:'start'});
+}));
 
 /* ---------- khởi động ---------- */
 async function boot(){
