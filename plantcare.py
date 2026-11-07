@@ -243,10 +243,111 @@ def detect_symptoms(message):
     return [sid for sid, kws in KEYWORDS.items() if _has(m, kws)]
 
 
-def offline_reply(message, species=None, symptoms=None):
-    """Trả lời dự phòng khi không có AI: bám vào triệu chứng nhắc trong câu hỏi, rồi hỏi thêm để thu hẹp."""
+YES_WORDS = ["co", "roi", "dung", "phai", "vang", "u", "uh", "du"]
+NO_WORDS = ["khong", "ko", "k", "chua", "chang", "khong co"]
+WET_WORDS = ["uot", "nhieu", "hang ngay", "moi ngay", "suot", "sinh", "dam"]
+DRY_WORDS = ["kho", "it", "thua", "hiem"]
+
+# Phản hồi khi người dùng trả lời câu hỏi kiểm tra của từng bệnh. Khóa: yes hoặc no.
+BRANCHES = {
+    "leaf_spot": {
+        "yes": "Vậy gần như chắc là đốm lá do nấm. Cắt bỏ lá có đốm và bỏ vào túi rác, dọn sạch lá rụng quanh gốc, tưới vào gốc thay vì lên lá. Nếu lan nhanh, phun thuốc trừ nấm gốc đồng theo đúng nhãn.",
+        "no": "Đốm không lan và không có viền vàng thì có thể chỉ là cháy nắng hoặc vết sâu cắn. Cắt lá hỏng, theo dõi thêm 1 đến 2 tuần, nếu đốm lan ra thì xử lý như nấm đốm lá.",
+    },
+    "soft_rot": {
+        "yes": "Củ mềm, nhớt hoặc có mùi hôi là dấu hiệu thối mềm, cần xử lý sớm. Đào củ lên, cắt bỏ phần thối đến chỗ thịt trắng và cứng, lau dụng cụ bằng cồn, phơi củ khô vài giờ rồi trồng lại ở chỗ thoát nước tốt.",
+        "no": "Củ còn cứng và không hôi thì khả năng thối mềm thấp. Lá héo lúc này thường do thiếu hoặc thừa nước. Bạn kiểm tra độ ẩm đất và tình trạng rễ nhé.",
+    },
+    "borer": {
+        "yes": "Rất có thể là sâu đục lá. Bóp nhẹ dọc vệt đục để diệt sâu non, cắt bỏ phần lá hỏng, rồi kiểm tra củ xem có bị đục hoặc thối không.",
+        "no": "Không thấy sâu thì ít khả năng là sâu đục. Bạn thử xem lại bệnh đốm lá hoặc úng nước.",
+    },
+    "rust": {
+        "yes": "Đúng là bệnh gỉ sắt rồi. Cắt bỏ lá nhiễm nặng, giữ lá khô khi tưới, và phun thuốc trừ nấm theo nhãn nếu bệnh lan.",
+        "no": "Không có bột cam hoặc nâu gỉ sắt thì không phải gỉ sắt. Bạn xem lại đốm lá do nấm hoặc thiếu dinh dưỡng.",
+    },
+    "botrytis": {
+        "yes": "Vậy là thối xám. Ngắt hoa tàn và phần có mốc ngay, không để rơi xuống gốc, giảm ẩm và tăng thông thoáng. Phun thuốc trừ nấm theo nhãn nếu trời ẩm kéo dài.",
+        "no": "Không thấy mốc xám thì ít khả năng là Botrytis. Bạn xem lại bọ trĩ nếu nụ méo hoặc không nở.",
+    },
+    "thrips": {
+        "yes": "Có thể là bọ trĩ. Cắt bỏ nụ hỏng nặng, xịt nước mạnh hoặc phun xà phòng côn trùng hoặc dầu neem theo nhãn, rồi lặp lại sau 5 đến 7 ngày.",
+        "no": "Không thấy côn trùng thì nụ méo có thể do thiếu nước hoặc nhiệt độ thay đổi đột ngột. Bạn theo dõi thêm vài ngày nhé.",
+    },
+    "aphids": {
+        "yes": "Vậy là rệp. Xịt nước mạnh để rửa trôi rệp, phun xà phòng côn trùng hoặc dầu neem theo nhãn, nhắc lại sau một tuần.",
+        "no": "Không thấy rệp thì lá vàng hoặc còi cọc có thể do nguyên nhân khác như thiếu dinh dưỡng hoặc nước. Bạn mô tả thêm về đất và cách tưới nhé.",
+    },
+    "mosaic": {
+        "yes": "Nhiều cây cùng có vệt khảm và còi cọc thì rất có thể là virus. Cách ly cây, khử trùng dụng cụ, diệt rệp. Cây nhiễm nặng nên nhổ bỏ và tiêu hủy.",
+        "no": "Chỉ một cây, vệt nhẹ và cây vẫn khỏe thì có thể do thiếu dinh dưỡng. Bạn theo dõi thêm và bón phân cân đối.",
+    },
+    "overwater": {
+        "yes": "Đất ướt liên tục là nguyên nhân chính. Ngưng tưới đến khi lớp đất mặt khô, kiểm tra xem củ có mềm không, và cải tạo đất cho thoát nước. Nếu trồng chậu, đảm bảo lỗ thoát không bị nghẹt.",
+        "no": "Đất khô mà lá vẫn vàng thì ít khả năng do úng. Bạn kiểm tra thiếu nước, thiếu dinh dưỡng hoặc rễ yếu.",
+    },
+    "scorch": {
+        "yes": "Vậy nhiều khả năng do khô hạn, nắng gắt hoặc thừa phân. Tưới đẫm và đều khi đất khô sâu, xả nước để rửa muối nếu mới bón phân, và giảm lượng phân đạm.",
+        "no": "Nếu đất đủ ẩm và không bón phân gần đây thì kiểm tra rễ và củ xem có bị thối hoặc sâu đục không.",
+    },
+}
+
+
+def _answer_kind(m, disease_id):
+    if disease_id == "overwater":
+        if _has(m, WET_WORDS):
+            return "yes"
+        if _has(m, DRY_WORDS):
+            return "no"
+    if _has(m, NO_WORDS):
+        return "no"
+    if _has(m, YES_WORDS):
+        return "yes"
+    return None
+
+
+def _last_disease(last_bot):
+    if not last_bot:
+        return None
+    for d in DISEASES:
+        if d["check"] in last_bot:
+            return d["id"]
+    return None
+
+
+def _followup(message, last_bot):
+    did = _last_disease(last_bot)
+    if not did:
+        return None
+    m = _padded(message)
+    if did == "no_bloom":
+        hours = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:h|gio|tieng)\b", message.lower().replace("giờ", "gio").replace("tiếng", "tieng"))
+        not_split = _has(m, ["chua", "khong", "ko"])
+        if hours:
+            h = float(hours.group(1).replace(",", "."))
+            if h >= 6:
+                out = f"{h:g} giờ nắng là đủ rồi, nên thiếu nắng không phải nguyên nhân."
+                if not_split:
+                    out += " Vì chưa chia củ lần nào, khả năng cao là củ đã mọc dày và chen nhau nên không ra hoa. Sau khi hoa tàn (hoặc vào mùa mát), đào lên, cắt bỏ phần củ già và hư, chia ra rồi trồng lại thưa hơn."
+                else:
+                    out += " Bạn kiểm tra tiếp hai thứ: phần trên của củ có lộ ra mặt đất không (trồng sâu thì khó ra hoa) và có bón thừa đạm không (lá xanh tốt nhưng ít hoa). Đổi sang phân nhiều lân và kali."
+                return out
+            return f"{h:g} giờ nắng là hơi ít, diên vĩ cần ít nhất 6 giờ nắng trực tiếp để ra hoa. Bạn thử dời cây sang chỗ nhiều nắng hơn, năm sau cây sẽ ra hoa tốt hơn."
+        if not_split:
+            return "Chưa chia củ lần nào thì khả năng củ đã mọc dày. Cây trồng quá 3 đến 4 năm nên được chia. Nắng của cây mỗi ngày được khoảng bao nhiêu giờ?"
+        return None
+    kind = _answer_kind(m, did)
+    return BRANCHES.get(did, {}).get(kind) if kind else None
+
+
+def offline_reply(message, species=None, symptoms=None, last_bot=None):
+    """Trả lời dự phòng khi không có AI: bám vào triệu chứng, nhận câu trả lời của người dùng cho câu hỏi kiểm tra."""
     m = _padded(message)
     said = detect_symptoms(message)
+    if not said:
+        fu = _followup(message, last_bot)
+        if fu:
+            return fu
     found = list(dict.fromkeys(said + [s for s in (symptoms or []) if s not in said]))
     if said or (found and not any(_has(m, k) for k, _ in FAQ)):
         dx = diagnose(found, limit=2)
@@ -264,6 +365,9 @@ def offline_reply(message, species=None, symptoms=None):
     for keys, answer in FAQ:
         if _has(m, keys):
             return answer
+    if _last_disease(last_bot):
+        return ("Mình chưa hiểu rõ câu trả lời của bạn cho câu hỏi vừa rồi. Bạn trả lời ngắn gọn có hoặc không, "
+                "hoặc nói rõ hơn (ví dụ số giờ nắng, đất ướt hay khô) giúp mình nhé.")
     return ("Mình chưa hiểu rõ bạn đang gặp vấn đề gì. Bạn mô tả giúp mình cụ thể hơn nhé, ví dụ: "
             "lá vàng hay đốm nâu, củ có mềm hoặc hôi không, cây bao lâu chưa ra hoa, "
             "đất thường ướt hay khô. Bạn cũng có thể chọn triệu chứng ở tab Chẩn đoán bệnh.")
