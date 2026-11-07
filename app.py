@@ -1,11 +1,18 @@
+import collections
+import json
+import os
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 import engine
+import plantcare
 
 BASE = Path(__file__).parent
 
@@ -77,3 +84,82 @@ def predict_batch(data: BatchInput):
     check_model(data.model)
     results = engine.predict_rows([r.values() for r in data.rows], data.model)
     return {"model": data.model, "count": len(results), "results": results}
+
+
+# ---------- Bác sĩ cây cảnh ----------
+class DiagnoseInput(BaseModel):
+    symptoms: List[str] = Field(min_length=1, max_length=20)
+
+
+class ChatMsg(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=1500)
+
+
+class ChatInput(BaseModel):
+    messages: List[ChatMsg] = Field(min_length=1, max_length=20)
+    species: Optional[str] = None
+    symptoms: List[str] = Field(default_factory=list, max_length=20)
+
+
+@app.get("/api/care-kb")
+def care_kb():
+    return {
+        "groups": [{"name": g, "items": [{"id": i, "label": l} for i, l in items]} for g, items in plantcare.SYMPTOM_GROUPS],
+        "species": plantcare.SPECIES_CARE,
+        "general": plantcare.GENERAL_TIPS,
+        "chat_mode": "ai" if os.environ.get("LLM_API_KEY") else "offline",
+    }
+
+
+@app.post("/api/diagnose")
+def diagnose(data: DiagnoseInput):
+    return {"results": plantcare.diagnose(data.symptoms)}
+
+
+# Giới hạn lượt chat theo IP để bảo vệ hạn mức miễn phí của nhà cung cấp AI
+CHAT_LIMIT, CHAT_WINDOW = 20, 600
+_hits = collections.defaultdict(collections.deque)
+
+
+def client_ip(req: Request):
+    fwd = req.headers.get("x-forwarded-for")
+    return fwd.split(",")[0].strip() if fwd else (req.client.host if req.client else "?")
+
+
+def call_llm(data: ChatInput):
+    key = os.environ.get("LLM_API_KEY")
+    if not key:
+        return None
+    base = os.environ.get("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai").rstrip("/")
+    model = os.environ.get("LLM_MODEL", "gemini-2.0-flash")
+    msgs = [{"role": "system", "content": plantcare.system_prompt(data.species, data.symptoms)}]
+    msgs += [{"role": m.role, "content": m.content} for m in data.messages[-10:]]
+    body = json.dumps({"model": model, "messages": msgs, "max_tokens": 500, "temperature": 0.4}).encode()
+    req = urllib.request.Request(base + "/chat/completions", data=body, headers={
+        "Content-Type": "application/json", "Authorization": "Bearer " + key})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            text = json.load(r)["choices"][0]["message"]["content"]
+        return (text or "").strip() or None
+    except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError):
+        return None
+
+
+@app.post("/api/chat")
+def chat(data: ChatInput, request: Request):
+    ip, now = client_ip(request), time.time()
+    q = _hits[ip]
+    while q and now - q[0] > CHAT_WINDOW:
+        q.popleft()
+    if len(q) >= CHAT_LIMIT:
+        raise HTTPException(status_code=429, detail="Bạn hỏi hơi nhanh, vui lòng thử lại sau ít phút.")
+    q.append(now)
+    if len(_hits) > 5000:
+        for k in [k for k, v in _hits.items() if not v]:
+            del _hits[k]
+    last = next((m.content for m in reversed(data.messages) if m.role == "user"), "")
+    reply = call_llm(data)
+    if reply:
+        return {"reply": reply, "mode": "ai"}
+    return {"reply": plantcare.offline_reply(last, data.species, data.symptoms), "mode": "offline"}

@@ -141,21 +141,38 @@ canvas{display:block;width:100%;border-radius:14px;background:var(--soft)}
 .imp em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
 .axis-tag{font-size:13px;color:var(--muted);margin:0}
 
-/* analysis */
-.fchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
-.fchips .btn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.axes{display:flex;flex-wrap:wrap;gap:10px 18px;margin:0 0 14px}
-.axes label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
-.axes select{padding:7px 34px 7px 12px;border-radius:10px;color:var(--ink)}
-.chart{display:block;width:100%;height:auto}
-.hm{display:grid;grid-template-columns:auto repeat(4,1fr);gap:4px;font-size:13px;margin-top:6px}
-.hm .h{color:var(--muted);text-align:center;font-size:12px;padding:2px;align-self:center}
-.hm .h.l{text-align:right;padding-right:8px}
-.hm .cell{aspect-ratio:1.3;display:grid;place-items:center;border-radius:10px;font:500 17px var(--serif);font-variant-numeric:tabular-nums}
-.sep{display:grid;gap:10px;margin-top:6px}
-.sep div{display:grid;grid-template-columns:110px 1fr 48px;gap:10px;align-items:center;font-size:14px}
-.sep .bar{background:var(--line)}.sep .bar b{background:var(--virginica-ink);width:var(--w)}
-.sep em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+/* chẩn đoán + chat */
+.sgroup{margin:0 0 16px}
+.sgroup h3{font:600 14px var(--sans);color:var(--muted);margin:0 0 8px}
+.schips{display:flex;flex-wrap:wrap;gap:8px}
+.schips .btn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dx{border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:10px;background:var(--surface)}
+.dx+.dx{margin-top:12px}
+.dx h3{font:500 20px/1.2 var(--serif);margin:0}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:12.5px;border-radius:99px;padding:3px 10px;background:var(--soft);color:var(--ink)}
+.badge.hi{background:var(--virginica-tint);color:var(--virginica-ink)}
+.badge.mid{background:#FFF4D6;color:#6B4E00}
+.badge.lo{background:var(--versicolor-tint);color:var(--versicolor-ink)}
+.dx h4{font:600 13px var(--sans);color:var(--muted);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.dx ul,.care ul{margin:0;padding-left:20px}
+.dx li,.care li{margin:3px 0}
+.dx p{margin:0}
+.disc{font-size:13px;color:var(--muted);background:var(--soft);border-radius:12px;padding:10px 12px;margin:14px 0 0}
+.care h3{font:italic 500 20px var(--serif);margin:0 0 4px}
+.care p{margin:0 0 8px;color:var(--muted)}
+.chat{display:flex;flex-direction:column;height:min(620px,70vh)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px}
+.bub{max-width:86%;padding:10px 14px;border-radius:16px;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
+.bub.me{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+.bub.bot{align-self:flex-start;background:var(--soft);border-bottom-left-radius:4px}
+.bub ul{margin:6px 0 0;padding-left:18px}
+.bub p{margin:0}.bub p+p{margin-top:6px}
+.bub.typing{color:var(--muted);font-style:italic}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.compose{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.compose textarea{min-height:0;height:46px;resize:none;flex:1;border-radius:14px;font:15px/1.5 var(--sans)}
+.mode{font-size:12.5px;color:var(--muted);margin:8px 0 0}
 
 /* batch */
 textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 14px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
@@ -186,7 +203,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
   <header>
     <div class="brand">
       <h1>Iris</h1>
-      <p>Nhập bốn số đo của một bông diên vĩ, mô hình cho biết đó là loài nào.</p>
+      <p>Nhận diện loài diên vĩ, chẩn đoán bệnh cho cây và hỏi chuyên gia chăm sóc, tất cả trong một nơi.</p>
     </div>
     <div class="picker">
       <label for="model">Mô hình đang dùng</label>
@@ -197,9 +214,10 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
   <div id="error" class="err" hidden role="alert"></div>
 
   <div class="tabs" role="tablist" aria-label="Chức năng">
-    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true">Dự đoán</button>
+    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true">Nhận diện loài</button>
+    <button class="tab" role="tab" id="t-dx" aria-controls="p-dx" aria-selected="false" tabindex="-1">Chẩn đoán bệnh</button>
+    <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1">Hỏi chuyên gia</button>
     <button class="tab" role="tab" id="t-models" aria-controls="p-models" aria-selected="false" tabindex="-1">So sánh mô hình</button>
-    <button class="tab" role="tab" id="t-analysis" aria-controls="p-analysis" aria-selected="false" tabindex="-1">Phân tích hình ảnh</button>
     <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1">Hàng loạt</button>
   </div>
 
@@ -302,52 +320,46 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
     </div>
   </section>
 
-  <!-- PHÂN TÍCH -->
-  <section id="p-analysis" role="tabpanel" aria-labelledby="t-analysis" hidden>
-    <div class="stack">
-      <div class="grid">
+  <!-- CHẨN ĐOÁN -->
+  <section id="p-dx" role="tabpanel" aria-labelledby="t-dx" hidden>
+    <div class="grid">
+      <div class="stack">
         <div class="card">
-          <h2>Phân bố từng số đo</h2>
-          <p class="sub">Biểu đồ cột chồng và hộp râu của ba loài. Nét đứt là số đo bạn đang nhập.</p>
-          <div class="fchips" id="an-feats" role="group" aria-label="Chọn số đo"></div>
-          <p class="legend"><span><i class="dot setosa"></i><i style="font-family:var(--serif)">setosa</i></span><span><i class="dot versicolor"></i><i style="font-family:var(--serif)">versicolor</i></span><span><i class="dot virginica"></i><i style="font-family:var(--serif)">virginica</i></span></p>
-          <svg id="an-dist" class="chart" viewBox="0 0 600 330" role="img" aria-label="Phân bố số đo theo loài"></svg>
-          <p class="note">Hộp là nửa giữa số mẫu, vạch trắng là trung vị, râu là giá trị nhỏ nhất đến lớn nhất.</p>
+          <h2>Cây của bạn bị sao?</h2>
+          <p class="sub">Chọn tất cả triệu chứng bạn thấy, càng đủ thì gợi ý càng sát.</p>
+          <div id="sym-groups"><p class="empty">Đang tải...</p></div>
+          <div class="actions">
+            <button class="btn primary" id="dx-run" disabled>Chẩn đoán</button>
+            <button class="btn" id="dx-clear">Bỏ chọn hết</button>
+            <span class="toast" id="dx-toast" role="status"></span>
+          </div>
         </div>
-        <div class="card">
-          <h2>Mẫu của bạn so với từng loài</h2>
-          <p class="sub">Mỗi dòng là một số đo. Thanh dày là khoảng chứa nửa số mẫu của loài, vạch mảnh là toàn bộ khoảng.</p>
-          <svg id="an-pos" class="chart" viewBox="0 0 600 280" role="img" aria-label="Vị trí mẫu của bạn so với phạm vi từng loài"></svg>
-        </div>
+        <div class="card care" id="care-card"></div>
       </div>
-      <div class="grid">
-        <div class="card">
-          <h2>Biểu đồ phân tán</h2>
-          <p class="sub">Chọn hai số đo để xem các loài tách nhau ra sao.</p>
-          <div class="axes">
-            <label>Trục ngang <select id="an-x"></select></label>
-            <label>Trục dọc <select id="an-y"></select></label>
-          </div>
-          <svg id="an-sc" class="chart" viewBox="0 0 600 400" role="img" aria-label="Biểu đồ phân tán hai số đo"></svg>
-          <p class="note" id="an-scnote"></p>
-        </div>
-        <div class="stack">
-          <div class="card">
-            <h2>Tương quan giữa các số đo</h2>
-            <p class="sub">Gần 1: hai số đo cùng tăng. Gần -1: một tăng một giảm. Gần 0: không liên quan.</p>
-            <div class="hm" id="an-hm"></div>
-          </div>
-          <div class="card">
-            <h2>Số đo nào tách loài rõ nhất</h2>
-            <p class="sub">Tỉ lệ F: khác biệt giữa các loài chia cho khác biệt trong cùng một loài. Càng lớn càng dễ phân biệt.</p>
-            <div class="sep" id="an-sep"></div>
-          </div>
-        </div>
+      <div class="card">
+        <h2>Kết quả chẩn đoán</h2>
+        <div id="dx-out"><p class="empty">Chọn triệu chứng rồi bấm Chẩn đoán.</p></div>
+        <p class="disc">Kết quả chỉ mang tính tham khảo, không thay thế người có chuyên môn. Cây bệnh nặng hoặc lan nhanh, hãy liên hệ cán bộ bảo vệ thực vật hoặc cửa hàng cây cảnh uy tín. Thuốc bảo vệ thực vật cần dùng đúng theo nhãn.</p>
       </div>
     </div>
   </section>
 
-  <footer>Mô hình học trên bộ dữ liệu Iris kinh điển của Fisher (150 mẫu, 3 loài). Kết quả chỉ đáng tin khi số đo nằm trong phạm vi của dữ liệu này.</footer>
+  <!-- CHAT -->
+  <section id="p-chat" role="tabpanel" aria-labelledby="t-chat" hidden>
+    <div class="card chat">
+      <h2>Hỏi chuyên gia chăm sóc diên vĩ</h2>
+      <p class="sub">Hỏi về tưới nước, ánh sáng, bón phân, sâu bệnh. Chuyên gia sẽ tham khảo loài và triệu chứng bạn đã chọn.</p>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="sugg" id="sugg"></div>
+      <form class="compose" id="chat-form">
+        <textarea id="chat-in" rows="1" maxlength="1500" placeholder="Nhập câu hỏi, ví dụ: lá diên vĩ bị vàng phải làm sao?" aria-label="Câu hỏi"></textarea>
+        <button class="btn primary" id="chat-send" type="submit">Gửi</button>
+      </form>
+      <p class="mode" id="chat-mode"></p>
+    </div>
+  </section>
+
+  <footer>Nhận diện loài dùng mô hình học trên bộ dữ liệu Iris của Fisher (150 mẫu, 3 loài), chỉ đáng tin khi số đo nằm trong phạm vi dữ liệu này. Chẩn đoán bệnh và lời khuyên chỉ mang tính tham khảo.</footer>
 </div>
 
 <script>
@@ -410,7 +422,7 @@ const tabs = [...document.querySelectorAll('.tab')];
 function selectTab(t){
   tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
   if (t.id==='t-predict') drawMap();
-  if (t.id==='t-analysis') renderAnalysis();
+  if (t.id==='t-dx') renderCare();
 }
 tabs.forEach((t,i) => {
   t.addEventListener('click', () => selectTab(t));
@@ -544,7 +556,6 @@ function renderResult(){
   const w = $('#warn');
   if (out.length){ w.textContent = 'Có số đo nằm ngoài phạm vi dữ liệu huấn luyện: ' + out.join('; ') + '. Kết quả kém tin cậy.'; w.hidden = false; } else w.hidden = true;
   drawMap();
-  renderAnalysis();
 }
 
 /* ---------- bản đồ ---------- */
@@ -751,155 +762,111 @@ $('#download').addEventListener('click', () => {
   document.body.append(a); a.click(); a.remove();
 });
 
-/* ---------- phân tích hình ảnh ---------- */
-const an = {f:2, x:0, y:2};
-const nf2 = new Intl.NumberFormat('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2});
-const rows = () => state.info.samples;
-const vals = (fi, s) => rows().filter(r => r.s===s).map(r => r.v[fi]);
-const quant = (a, p) => { const i = (a.length-1)*p, lo = Math.floor(i), hi = Math.ceil(i); return a[lo] + (a[hi]-a[lo])*(i-lo); };
-function five(fi, s){
-  const a = vals(fi,s).sort((p,q) => p-q);
-  return {min:a[0], q1:quant(a,.25), med:quant(a,.5), q3:quant(a,.75), max:a[a.length-1], mean:a.reduce((t,v) => t+v,0)/a.length};
-}
-function range(fi, extra){
-  const all = rows().map(r => r.v[fi]).concat(extra==null ? [] : [extra]);
-  return [Math.floor(Math.min(...all)*2)/2, Math.ceil(Math.max(...all)*2)/2];
-}
-function txt(p, x, y, s, a){
-  const t = el('text', Object.assign({x, y, 'font-size':12, fill:css('--muted'), 'font-family':css('--sans')}, a||{}), p);
-  t.textContent = s; return t;
-}
-function corr(i, j){
-  const xs = rows().map(r => r.v[i]), ys = rows().map(r => r.v[j]), n = xs.length;
-  const mx = xs.reduce((a,b) => a+b,0)/n, my = ys.reduce((a,b) => a+b,0)/n;
-  let c = 0, vx = 0, vy = 0;
-  for (let k=0;k<n;k++){ c += (xs[k]-mx)*(ys[k]-my); vx += (xs[k]-mx)**2; vy += (ys[k]-my)**2; }
-  return c/Math.sqrt(vx*vy);
-}
-function fratio(fi){
-  const groups = [0,1,2].map(s => vals(fi,s)), all = groups.flat(), N = all.length;
-  const g = all.reduce((a,b) => a+b,0)/N;
-  let between = 0, within = 0;
-  groups.forEach(a => { const m = a.reduce((x,y) => x+y,0)/a.length; between += a.length*(m-g)**2; a.forEach(v => within += (v-m)**2); });
-  return (between/2)/(within/(N-3));
-}
-function initAnalysis(){
-  const box = $('#an-feats'); box.textContent = '';
-  FEATS.forEach((f,i) => {
-    const b = h('button',{class:'btn','aria-pressed':i===an.f,text:f.label});
-    b.addEventListener('click', () => { an.f = i; [...box.children].forEach((c,j) => c.setAttribute('aria-pressed', j===i)); renderAnalysis(); });
-    box.append(b);
-  });
-  ['x','y'].forEach(ax => {
-    const sel = $('#an-'+ax); sel.textContent = '';
-    FEATS.forEach((f,i) => sel.append(h('option',{value:i,text:f.label})));
-    sel.value = an[ax];
-    sel.addEventListener('change', () => { an[ax] = +sel.value; renderAnalysis(); });
-  });
-}
-function renderAnalysis(){
-  if (!state.info || $('#p-analysis').hidden) return;
-  drawDist(); drawPos(); drawScatter(); drawCorr(); drawSep();
-}
-function drawDist(){
-  const fi = an.f, f = FEATS[fi], cur = state.values[f.k];
-  const W = 600, H = 330, L = 14, R = 14, pw = W-L-R, yTop = 24, yBot = 206;
-  const [lo, hi] = range(fi, cur), nb = 16, bw = (hi-lo)/nb;
-  const x = v => L + (v-lo)/(hi-lo)*pw;
-  const colr = SP.map(s => css('--'+s));
-  const svg = $('#an-dist'); svg.textContent = '';
-  const counts = SP.map((s,k) => { const c = new Array(nb).fill(0); vals(fi,k).forEach(v => c[Math.min(nb-1, Math.floor((v-lo)/bw))]++); return c; });
-  const mx = Math.max(...counts.flat());
-  const y = c => yBot - c/mx*(yBot-yTop);
-  for (let t=0;t<=5;t++){ const v = lo+(hi-lo)*t/5;
-    el('line',{x1:x(v),x2:x(v),y1:yTop,y2:yBot,stroke:css('--line'),'stroke-width':1}, svg);
-    txt(svg, x(v), yBot+15, nf1.format(v), {'text-anchor':'middle'}); }
-  el('line',{x1:L,x2:W-R,y1:yBot,y2:yBot,stroke:css('--muted'),'stroke-width':1}, svg);
-  txt(svg, W-R, yBot+30, f.label+' (cm)', {'text-anchor':'end'});
-  counts.forEach((c,k) => {
-    let d = `M${x(lo)} ${yBot}`;
-    c.forEach((n,b) => { d += `L${x(lo+b*bw)} ${y(n)}L${x(lo+(b+1)*bw)} ${y(n)}`; });
-    d += `L${x(hi)} ${yBot}Z`;
-    el('path',{d,fill:colr[k],'fill-opacity':.28,stroke:colr[k],'stroke-width':1.8,'stroke-linejoin':'round'}, svg);
-  });
-  SP.forEach((s,k) => {
-    const q = five(fi,k), cy = 258 + k*28;
-    txt(svg, L, cy-9, s, {'font-style':'italic','font-family':css('--serif'),'font-size':12,fill:css('--'+s+'-ink')});
-    el('line',{x1:x(q.min),x2:x(q.max),y1:cy,y2:cy,stroke:colr[k],'stroke-width':2}, svg);
-    el('line',{x1:x(q.min),x2:x(q.min),y1:cy-5,y2:cy+5,stroke:colr[k],'stroke-width':2}, svg);
-    el('line',{x1:x(q.max),x2:x(q.max),y1:cy-5,y2:cy+5,stroke:colr[k],'stroke-width':2}, svg);
-    el('rect',{x:x(q.q1),y:cy-7,width:Math.max(2,x(q.q3)-x(q.q1)),height:14,rx:3,fill:colr[k]}, svg);
-    el('line',{x1:x(q.med),x2:x(q.med),y1:cy-7,y2:cy+7,stroke:'#fff','stroke-width':2.2}, svg);
-  });
-  el('line',{x1:x(cur),x2:x(cur),y1:yTop-8,y2:H-8,stroke:css('--ink'),'stroke-width':2,'stroke-dasharray':'5 4'}, svg);
-  const ax = clamp(x(cur), 50, W-50);
-  txt(svg, ax, 12, 'Mẫu của bạn: '+nf1.format(cur), {'text-anchor':'middle','font-weight':600,fill:css('--ink')});
-}
-function drawPos(){
-  const svg = $('#an-pos'); svg.textContent = '';
-  const W = 600, L = 8, pw = W-2*L, colr = SP.map(s => css('--'+s));
-  FEATS.forEach((f,i) => {
-    const cur = state.values[f.k], [lo,hi] = range(i, cur), y0 = i*70 + 4;
-    const x = v => L + (v-lo)/(hi-lo)*pw;
-    const qs = SP.map((s,k) => five(i,k));
-    const sd = qs.map((q,k) => { const a = vals(i,k); return Math.sqrt(a.reduce((t,v) => t+(v-q.mean)**2,0)/a.length) || 1; });
-    const near = SP.reduce((b,s,k) => Math.abs(cur-qs[k].mean)/sd[k] < Math.abs(cur-qs[b].mean)/sd[b] ? k : b, 0);
-    txt(svg, L, y0+11, f.label+': '+nf1.format(cur)+' cm', {'font-weight':600,fill:css('--ink')});
-    txt(svg, W-L, y0+11, 'gần '+SP[near]+' nhất', {'text-anchor':'end',fill:css('--'+SP[near]+'-ink')});
-    el('line',{x1:L,x2:W-L,y1:y0+60,y2:y0+60,stroke:css('--line')}, svg);
-    qs.forEach((q,k) => {
-      const cy = y0 + 22 + k*13;
-      el('line',{x1:x(q.min),x2:x(q.max),y1:cy,y2:cy,stroke:colr[k],'stroke-width':1.6}, svg);
-      el('rect',{x:x(q.q1),y:cy-4,width:Math.max(2,x(q.q3)-x(q.q1)),height:8,rx:2,fill:colr[k]}, svg);
+/* ---------- bác sĩ cây cảnh ---------- */
+const care = {kb:null, picked:new Set(), msgs:[]};
+const curSpecies = () => state.result ? state.result.prediction : null;
+
+async function loadCare(){
+  try{ care.kb = await api('/api/care-kb'); }catch(e){ $('#sym-groups').textContent = 'Không tải được danh sách triệu chứng.'; return; }
+  const box = $('#sym-groups'); box.textContent = '';
+  care.kb.groups.forEach(g => {
+    const row = h('div',{class:'schips',role:'group','aria-label':g.name});
+    g.items.forEach(it => {
+      const b = h('button',{class:'btn',type:'button','aria-pressed':'false',text:it.label});
+      b.addEventListener('click', () => {
+        const on = !care.picked.has(it.id); on ? care.picked.add(it.id) : care.picked.delete(it.id);
+        b.setAttribute('aria-pressed', on); $('#dx-run').disabled = care.picked.size===0;
+      });
+      row.append(b);
     });
-    el('line',{x1:x(cur),x2:x(cur),y1:y0+16,y2:y0+62,stroke:css('--ink'),'stroke-width':2.4}, svg);
-    el('circle',{cx:x(cur),cy:y0+16,r:4,fill:css('--ink')}, svg);
+    box.append(h('div',{class:'sgroup'}, h('h3',{text:g.name}), row));
   });
+  renderCare(); renderChatMode();
 }
-function drawScatter(){
-  const svg = $('#an-sc'); svg.textContent = '';
-  const W = 600, H = 400, L = 46, R = 14, T = 14, B = 42;
-  const fx = FEATS[an.x], fy = FEATS[an.y], cx = state.values[fx.k], cy = state.values[fy.k];
-  const [x0,x1] = range(an.x, cx), [y0,y1] = range(an.y, cy);
-  const X = v => L + (v-x0)/(x1-x0)*(W-L-R), Y = v => H-B - (v-y0)/(y1-y0)*(H-B-T);
-  const colr = SP.map(s => css('--'+s));
-  for (let t=0;t<=5;t++){
-    const vx = x0+(x1-x0)*t/5, vy = y0+(y1-y0)*t/5;
-    el('line',{x1:X(vx),x2:X(vx),y1:T,y2:H-B,stroke:css('--line')}, svg);
-    el('line',{x1:L,x2:W-R,y1:Y(vy),y2:Y(vy),stroke:css('--line')}, svg);
-    txt(svg, X(vx), H-B+16, nf1.format(vx), {'text-anchor':'middle'});
-    txt(svg, L-8, Y(vy)+4, nf1.format(vy), {'text-anchor':'end'});
+function renderCare(){
+  const card = $('#care-card'); if (!care.kb) return;
+  const sp = curSpecies(), c = care.kb.species[sp];
+  card.textContent = '';
+  if (c){
+    card.append(h('h3',{text:c.title}), h('p',{text:c.summary}), h('ul',{}, c.tips.map(t => h('li',{text:t}))));
+    card.append(h('p',{class:'note',text:'Loài theo kết quả ở tab Nhận diện loài.'}));
+  } else {
+    card.append(h('h3',{text:'Mẹo chăm sóc chung'}), h('ul',{}, care.kb.general.map(t => h('li',{text:t}))));
   }
-  txt(svg, (L+W-R)/2, H-6, fx.label+' (cm)', {'text-anchor':'middle'});
-  const yl = txt(svg, 12, (T+H-B)/2, fy.label+' (cm)', {'text-anchor':'middle'}); yl.setAttribute('transform', `rotate(-90 12 ${(T+H-B)/2})`);
-  rows().forEach(r => el('circle',{cx:X(r.v[an.x]),cy:Y(r.v[an.y]),r:4.6,fill:colr[r.s],'fill-opacity':.75,stroke:'#fff','stroke-width':1}, svg));
-  const k = state.result ? state.result.class_id : 0;
-  el('circle',{cx:X(cx),cy:Y(cy),r:16,fill:colr[k],'fill-opacity':.2}, svg);
-  el('circle',{cx:X(cx),cy:Y(cy),r:7.5,fill:colr[k],stroke:css('--ink'),'stroke-width':3}, svg);
-  const lx = X(cx), lab = 'Mẫu của bạn', right = lx+14+80 < W;
-  const t = txt(svg, right ? lx+14 : lx-14, Y(cy)-12, lab, {'text-anchor':right?'start':'end','font-weight':600,fill:css('--ink'),stroke:css('--surface'),'stroke-width':4,'paint-order':'stroke'});
-  $('#an-scnote').textContent = an.x===an.y
-    ? 'Hai trục đang cùng một số đo nên các điểm nằm trên đường chéo.'
-    : 'Hệ số tương quan giữa '+fx.label.toLowerCase()+' và '+fy.label.toLowerCase()+': r = '+nf2.format(corr(an.x,an.y))+'.';
 }
-function drawCorr(){
-  const hm = $('#an-hm'); hm.textContent = '';
-  hm.append(h('div'));
-  FEATS.forEach(f => hm.append(h('div',{class:'h',text:f.short.replace(' hoa','')})));
-  FEATS.forEach((f,i) => {
-    hm.append(h('div',{class:'h l',text:f.short.replace(' hoa','')}));
-    FEATS.forEach((g,j) => {
-      const r = corr(i,j), a = Math.abs(r);
-      const c = r>=0 ? 'versicolor' : 'virginica';
-      hm.append(h('div',{class:'cell',style:`background:color-mix(in srgb, var(--${c}) ${Math.round(a*85)}%, #fff);color:${a>.6?'#fff':'var(--ink)'}`,text:nf2.format(r)}));
-    });
+function badge(text, cls){ return h('span',{class:'badge '+cls,text}); }
+function renderDx(res){
+  const out = $('#dx-out'); out.textContent = '';
+  if (!res.length){ out.append(h('p',{class:'empty',text:'Chưa tìm thấy bệnh phù hợp. Thử chọn thêm triệu chứng hoặc hỏi chuyên gia.'})); return; }
+  res.forEach((d,i) => {
+    const lk = d.likelihood==='Cao' ? 'hi' : d.likelihood==='Trung bình' ? 'mid' : 'lo';
+    const ask = h('button',{class:'btn sm',type:'button',text:'Hỏi chuyên gia về bệnh này'});
+    ask.addEventListener('click', () => { selectTab($('#t-chat')); sendChat('Cây của mình có thể bị "'+d.name+'". Mình nên xử lý thế nào và bao lâu thì thấy cây khỏe lại?'); });
+    out.append(h('div',{class:'dx'},
+      h('h3',{text:(i+1)+'. '+d.name}),
+      h('div',{class:'badges'}, badge('Khả năng: '+d.likelihood.toLowerCase(), lk), badge('Mức nghiêm trọng: '+d.severity.toLowerCase(), d.severity==='Cao'?'hi':'')),
+      h('p',{text:d.cause}),
+      h('h4',{text:'Khớp với triệu chứng'}), h('p',{text:d.matched.join('; ')}),
+      h('h4',{text:'Cách xử lý'}), h('ul',{}, d.treat.map(t => h('li',{text:t}))),
+      h('h4',{text:'Phòng ngừa'}), h('ul',{}, d.prevent.map(t => h('li',{text:t}))),
+      h('div',{}, ask)));
   });
 }
-function drawSep(){
-  const box = $('#an-sep'); box.textContent = '';
-  const fr = FEATS.map((f,i) => ({f, v:fratio(i)})).sort((a,b) => b.v-a.v);
-  const mx = fr[0].v;
-  fr.forEach(({f,v}) => box.append(h('div',{}, h('span',{text:f.short}), h('div',{class:'bar'}, h('b',{style:`--w:${v/mx*100}%`})), h('em',{text:Math.round(v).toLocaleString('vi-VN')}))));
+$('#dx-run').addEventListener('click', async () => {
+  const btn = $('#dx-run'), t = $('#dx-toast'); btn.disabled = true; t.textContent = 'Đang phân tích...';
+  try{ const r = await api('/api/diagnose', {symptoms:[...care.picked]}); renderDx(r.results); t.textContent = ''; }
+  catch(e){ t.textContent = 'Không chẩn đoán được: '+e.message; }
+  btn.disabled = care.picked.size===0;
+});
+$('#dx-clear').addEventListener('click', () => {
+  care.picked.clear(); document.querySelectorAll('#sym-groups .btn').forEach(b => b.setAttribute('aria-pressed','false'));
+  $('#dx-run').disabled = true; $('#dx-out').replaceChildren(h('p',{class:'empty',text:'Chọn triệu chứng rồi bấm Chẩn đoán.'}));
+});
+
+/* chat */
+function richText(text){
+  const frag = document.createDocumentFragment(); let list = null;
+  const inline = (parent, s) => s.split(/(\*\*[^*]+\*\*)/).forEach(p => { if (/^\*\*[^*]+\*\*$/.test(p)) parent.append(h('b',{text:p.slice(2,-2)})); else if (p) parent.append(p); });
+  text.split(/\r?\n/).forEach(line => {
+    const m = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (m){ if (!list){ list = h('ul'); frag.append(list); } const li = h('li'); inline(li, m[1]); list.append(li); }
+    else if (line.trim()){ list = null; const p = h('p'); inline(p, line.trim()); frag.append(p); }
+  });
+  return frag;
+}
+function addBubble(role, text, cls){
+  const b = h('div',{class:'bub '+(role==='user'?'me':'bot')+(cls?' '+cls:'')});
+  b.append(role==='user' ? document.createTextNode(text) : richText(text));
+  const box = $('#msgs'); box.append(b); box.scrollTop = box.scrollHeight; return b;
+}
+function renderChatMode(){
+  const m = care.kb && care.kb.chat_mode==='ai';
+  $('#chat-mode').textContent = m ? 'Trả lời bởi trợ lý AI. Nội dung chỉ mang tính tham khảo.' : 'Đang dùng chế độ trả lời tự động từ cơ sở tri thức có sẵn.';
+}
+let chatBusy = false;
+async function sendChat(text){
+  text = (text||'').trim(); if (!text || chatBusy) return;
+  chatBusy = true; $('#chat-send').disabled = true; $('#sugg').hidden = true;
+  addBubble('user', text); care.msgs.push({role:'user', content:text});
+  const wait = addBubble('assistant', 'Đang soạn câu trả lời...', 'typing');
+  try{
+    const r = await api('/api/chat', {messages:care.msgs.slice(-10), species:curSpecies(), symptoms:[...care.picked]});
+    wait.remove(); addBubble('assistant', r.reply); care.msgs.push({role:'assistant', content:r.reply});
+    if (care.kb){ care.kb.chat_mode = r.mode; renderChatMode(); }
+  }catch(e){
+    wait.remove(); care.msgs.pop();
+    addBubble('assistant', e.message || 'Không kết nối được máy chủ, vui lòng thử lại.');
+  }
+  chatBusy = false; $('#chat-send').disabled = false; $('#chat-in').focus();
+}
+$('#chat-form').addEventListener('submit', e => { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); });
+$('#chat-in').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); $('#chat-form').requestSubmit(); } });
+function initChat(){
+  addBubble('assistant', 'Xin chào! Mình là chuyên gia chăm sóc hoa diên vĩ. Bạn cần hỏi gì về cây của mình?');
+  const s = $('#sugg');
+  ['Lá diên vĩ bị vàng phải làm sao?','Bao lâu nên tưới nước một lần?','Vì sao cây không ra hoa?','Khi nào nên chia củ?'].forEach(q => {
+    const b = h('button',{class:'btn sm',type:'button',text:q}); b.addEventListener('click', () => sendChat(q)); s.append(b);
+  });
 }
 
 /* ---------- khởi động ---------- */
@@ -917,7 +884,8 @@ async function boot(){
   try{ const saved = localStorage.getItem('iris-model'); if (saved && state.info.models.some(m => m.id===saved)) state.model = saved; else state.model = state.info.default_model; }catch(e){ state.model = state.info.default_model; }
   sel.value = state.model;
   state.history = store.get().filter(x => x && Array.isArray(x.v) && x.v.length===4 && SP.includes(x.sp));
-  initFlower(); buildSliders(); renderHistory(); renderModels(); initAnalysis(); tweenFlower();
+  initFlower(); buildSliders(); renderHistory(); renderModels(); tweenFlower();
+  initChat(); loadCare();
   ensureRegions().then(drawMap);
   predict();
 }
