@@ -162,4 +162,5 @@ def chat(data: ChatInput, request: Request):
     reply = call_llm(data)
     if reply:
         return {"reply": reply, "mode": "ai"}
-    return {"reply": plantcare.offline_reply(last, data.species, data.symptoms), "mode": "offline"}
+    last_bot = next((m.content for m in reversed(data.messages) if m.role == "assistant"), None)
+    return {"reply": plantcare.offline_reply(last, data.species, data.symptoms, last_bot), "mode": "offline"}
