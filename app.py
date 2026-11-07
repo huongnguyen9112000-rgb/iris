@@ -6,7 +6,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import List, Optional
- 
+
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Request, Response
