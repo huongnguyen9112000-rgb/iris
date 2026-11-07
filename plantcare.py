@@ -9,6 +9,7 @@ SYMPTOM_GROUPS = [
         ("leaf_tips_brown", "Đầu lá khô nâu"),
         ("yellow_leaves", "Lá vàng"),
         ("wilting", "Lá héo, rũ, gục"),
+        ("dry_wilt", "Thân hoặc lá khô dần, úa từ ngọn"),
         ("water_soaked", "Vệt úng nước (xanh sẫm, nhớt) trên lá"),
         ("holes_in_leaves", "Lá có đường đục hoặc lỗ"),
         ("orange_pustules", "Mụn bột màu cam, nâu gỉ sắt"),
@@ -32,7 +33,7 @@ SYMPTOMS = {sid: label for _, items in SYMPTOM_GROUPS for sid, label in items}
 # signs: triệu chứng -> trọng số (1 đến 3)
 DISEASES = [
     {
-        "id": "leaf_spot", "name": "Bệnh đốm lá do nấm", "severity": "Trung bình",
+        "id": "leaf_spot", "check": "Đốm có viền vàng và lan dần từ lá dưới lên không?", "name": "Bệnh đốm lá do nấm", "severity": "Trung bình",
         "cause": "Nấm lây qua nước bắn và tàn dư lá cũ, nặng hơn khi ẩm và ít thông thoáng.",
         "signs": {"leaf_spots": 3, "yellow_leaves": 1, "leaf_tips_brown": 1},
         "treat": ["Cắt bỏ lá có đốm, bỏ vào túi rác, không ủ phân.",
@@ -41,9 +42,9 @@ DISEASES = [
         "prevent": ["Tỉa thưa, giữ khoảng cách để gió lùa.", "Dọn sạch lá rụng vào cuối mùa."],
     },
     {
-        "id": "soft_rot", "name": "Thối mềm thân rễ", "severity": "Cao",
+        "id": "soft_rot", "check": "Bạn thử nhẹ tay bới đất xem củ có mềm, nhớt hoặc có mùi hôi không?", "name": "Thối mềm thân rễ", "severity": "Cao",
         "cause": "Vi khuẩn xâm nhập qua vết thương hoặc vết sâu đục, nặng khi đất úng.",
-        "signs": {"soft_rhizome": 3, "wilting": 2, "yellow_leaves": 1, "water_soaked": 2},
+        "signs": {"soft_rhizome": 3, "wilting": 2, "dry_wilt": 1, "yellow_leaves": 1, "water_soaked": 2},
         "treat": ["Đào củ lên, cắt bỏ toàn bộ phần mềm nhũn đến chỗ thịt củ còn trắng và cứng.",
                   "Dụng cụ cắt cần lau cồn hoặc nước tẩy loãng sau mỗi lần cắt.",
                   "Phơi củ nơi nắng và khô vài giờ, trồng lại vào đất thoát nước tốt.",
@@ -51,16 +52,16 @@ DISEASES = [
         "prevent": ["Không trồng sâu, để lộ nửa trên của củ.", "Đảm bảo thoát nước, không tưới quá nhiều."],
     },
     {
-        "id": "borer", "name": "Sâu đục lá và củ", "severity": "Cao",
+        "id": "borer", "check": "Có đường đục hoặc vệt nhớt dọc lá, và có sâu non màu hồng nhạt trong lá không?", "name": "Sâu đục lá và củ", "severity": "Cao",
         "cause": "Sâu non đục vào lá rồi xuống củ, tạo vết thương cho vi khuẩn gây thối.",
-        "signs": {"holes_in_leaves": 3, "water_soaked": 2, "soft_rhizome": 1, "wilting": 1},
+        "signs": {"holes_in_leaves": 3, "water_soaked": 2, "soft_rhizome": 1, "wilting": 1, "dry_wilt": 1},
         "treat": ["Bóp nhẹ dọc lá có vết đục để diệt sâu non, hoặc cắt bỏ lá đó.",
                   "Kiểm tra củ, loại bỏ phần bị đục và xử lý như bệnh thối mềm nếu có.",
                   "Dọn sạch tàn dư lá cũ vì trứng qua đông ở đó."],
         "prevent": ["Dọn lá khô vào cuối thu.", "Kiểm tra lá non mỗi tuần vào đầu mùa xuân."],
     },
     {
-        "id": "rust", "name": "Bệnh gỉ sắt", "severity": "Thấp đến trung bình",
+        "id": "rust", "check": "Mặt dưới lá có bột màu cam hoặc nâu gỉ sắt, chạm vào dính tay không?", "name": "Bệnh gỉ sắt", "severity": "Thấp đến trung bình",
         "cause": "Nấm gỉ sắt phát triển khi lá ẩm lâu, thường vào thời tiết mát ẩm.",
         "signs": {"orange_pustules": 3, "yellow_leaves": 1, "leaf_spots": 1},
         "treat": ["Cắt bỏ lá nhiễm nặng và tiêu hủy.",
@@ -69,7 +70,7 @@ DISEASES = [
         "prevent": ["Tăng độ thông thoáng.", "Không bón thừa đạm."],
     },
     {
-        "id": "botrytis", "name": "Thối xám (nấm Botrytis)", "severity": "Trung bình",
+        "id": "botrytis", "check": "Hoa tàn có phủ lớp mốc xám và gần đây trời ẩm, nhiều sương không?", "name": "Thối xám (nấm Botrytis)", "severity": "Trung bình",
         "cause": "Nấm phát triển trên hoa tàn và mô yếu khi trời ẩm, lạnh, ít nắng.",
         "signs": {"gray_mold": 3, "distorted_buds": 1, "leaf_spots": 1},
         "treat": ["Ngắt hoa tàn và phần có mốc ngay, không để rơi xuống gốc.",
@@ -78,7 +79,7 @@ DISEASES = [
         "prevent": ["Ngắt hoa tàn thường xuyên.", "Tránh trồng quá dày."],
     },
     {
-        "id": "thrips", "name": "Bọ trĩ", "severity": "Thấp đến trung bình",
+        "id": "thrips", "check": "Nụ có vệt bạc, méo hoặc không nở, và có côn trùng rất nhỏ trong nụ không?", "name": "Bọ trĩ", "severity": "Thấp đến trung bình",
         "cause": "Côn trùng rất nhỏ hút nhựa nụ và lá non, làm nụ méo, hoa có vệt bạc.",
         "signs": {"distorted_buds": 3, "no_blooms": 1, "leaf_tips_brown": 1},
         "treat": ["Cắt bỏ nụ hỏng nặng.",
@@ -87,7 +88,7 @@ DISEASES = [
         "prevent": ["Kiểm tra nụ non thường xuyên.", "Dọn cỏ dại quanh gốc."],
     },
     {
-        "id": "aphids", "name": "Rệp và nguy cơ truyền virus", "severity": "Trung bình",
+        "id": "aphids", "check": "Có đàn côn trùng nhỏ bám ở lá non hoặc nụ, và lá có dính tay không?", "name": "Rệp và nguy cơ truyền virus", "severity": "Trung bình",
         "cause": "Rệp hút nhựa, tiết chất dính và có thể truyền virus giữa các cây.",
         "signs": {"sticky_insects": 3, "stunted": 1, "yellow_leaves": 1, "mosaic": 1},
         "treat": ["Xịt nước mạnh để rửa trôi rệp.",
@@ -96,7 +97,7 @@ DISEASES = [
         "prevent": ["Khuyến khích thiên địch như bọ rùa.", "Hạn chế bón thừa đạm tạo lá non mềm."],
     },
     {
-        "id": "mosaic", "name": "Virus khảm", "severity": "Cao",
+        "id": "mosaic", "check": "Vệt khảm vàng nhạt có xuất hiện ở nhiều cây, cây có còi cọc hẳn không?", "name": "Virus khảm", "severity": "Cao",
         "cause": "Virus lây qua rệp và dụng cụ cắt, không có thuốc chữa.",
         "signs": {"mosaic": 3, "stunted": 2, "yellow_leaves": 1},
         "treat": ["Cách ly cây, khử trùng dụng cụ sau khi dùng.",
@@ -105,25 +106,25 @@ DISEASES = [
         "prevent": ["Dùng dụng cụ sạch.", "Mua giống từ nguồn đáng tin."],
     },
     {
-        "id": "overwater", "name": "Tưới quá nhiều hoặc đất úng", "severity": "Trung bình",
+        "id": "overwater", "check": "Đất dưới gốc đang ướt hay khô, và gần đây bạn tưới bao nhiêu lần mỗi tuần?", "name": "Tưới quá nhiều hoặc đất úng", "severity": "Trung bình",
         "cause": "Rễ thiếu oxy, lá vàng và héo dù đất vẫn ướt. Thường dẫn tới thối củ nếu kéo dài.",
-        "signs": {"yellow_leaves": 2, "wilting": 2, "soft_rhizome": 1, "stunted": 1},
+        "signs": {"yellow_leaves": 2, "wilting": 2, "dry_wilt": 1, "soft_rhizome": 1, "stunted": 1},
         "treat": ["Ngưng tưới cho tới khi lớp đất mặt khô.",
                   "Kiểm tra củ, nếu mềm thì xử lý như bệnh thối mềm.",
                   "Cải tạo đất thoát nước, trồng chậu có lỗ thoát."],
         "prevent": ["Chỉ tưới khi lớp đất mặt khô.", "Trồng ở nền cao hoặc đất tơi xốp."],
     },
     {
-        "id": "scorch", "name": "Cháy đầu lá (khô hạn hoặc thừa phân)", "severity": "Thấp",
+        "id": "scorch", "check": "Đất đã khô sâu chưa, cây có bị nắng gắt buổi trưa hoặc mới bón phân không?", "name": "Khô héo do thiếu nước, nắng gắt hoặc thừa phân", "severity": "Thấp",
         "cause": "Thường do thiếu nước, nắng gắt, hoặc muối từ phân bón tích tụ.",
-        "signs": {"leaf_tips_brown": 3, "yellow_leaves": 1, "stunted": 1},
+        "signs": {"leaf_tips_brown": 3, "dry_wilt": 3, "yellow_leaves": 1, "stunted": 1},
         "treat": ["Cắt phần khô, tưới đẫm đều khi đất khô sâu.",
                   "Xả nước nhiều để rửa muối nếu mới bón phân.",
                   "Giảm lượng phân, nhất là phân đạm."],
         "prevent": ["Tưới đều đặn.", "Bón phân ít và chia nhỏ lần."],
     },
     {
-        "id": "no_bloom", "name": "Cây không ra hoa do điều kiện trồng", "severity": "Thấp",
+        "id": "no_bloom", "check": "Cây được bao nhiêu giờ nắng mỗi ngày, và đã chia củ lần nào chưa?", "name": "Cây không ra hoa do điều kiện trồng", "severity": "Thấp",
         "cause": "Thiếu nắng (cần ít nhất 6 giờ), trồng quá sâu, bón thừa đạm hoặc củ quá dày cần chia.",
         "signs": {"no_blooms": 3, "stunted": 1},
         "treat": ["Chuyển sang chỗ có nắng trực tiếp ít nhất 6 giờ mỗi ngày.",
@@ -179,7 +180,7 @@ def diagnose(symptom_ids, limit=4):
         level = "Cao" if score >= 0.6 else ("Trung bình" if score >= 0.35 else "Thấp")
         out.append((score, got, {
             "id": d["id"], "name": d["name"], "likelihood": level, "severity": d["severity"],
-            "cause": d["cause"], "treat": d["treat"], "prevent": d["prevent"],
+            "cause": d["cause"], "check": d["check"], "treat": d["treat"], "prevent": d["prevent"],
             "matched": [SYMPTOMS[s] for s in hit],
         }))
     out.sort(key=lambda t: (-t[0], -t[1]))
@@ -194,18 +195,19 @@ def norm(text):
 KEYWORDS = {
     "leaf_spots": ["dom nau", "dom xam", "dom la", "dom den", "vet dom"],
     "leaf_tips_brown": ["kho dau la", "dau la kho", "chay dau la", "kho nau", "chay la"],
-    "yellow_leaves": ["la vang", "vang la", "vang"],
-    "wilting": ["heo", "ru", "guc", "xi", "heo ru"],
+    "yellow_leaves": ["la vang", "vang la", "vang", "ua", "vang ua", "la ua"],
+    "wilting": ["heo", "ru", "guc", "xi", "heo ru", "heo ua", "la rung"],
+    "dry_wilt": ["bi kho", "dang kho", "kho het", "kho queo", "kho cung", "kho dan", "kho ngon", "than kho", "cay kho", "chet kho", "chet ngon", "kho heo", "kho khoe"],
     "water_soaked": ["nhot", "ung nuoc", "nhao"],
     "holes_in_leaves": ["duc la", "lo tren la", "sau duc", "co sau", "sau an"],
     "orange_pustules": ["gi sat", "mun cam", "bot cam", "bot nau"],
     "mosaic": ["kham", "vet vang nhat"],
-    "soft_rhizome": ["cu mem", "cu thoi", "thoi cu", "nhun", "mui hoi", "thoi re", "re thoi", "cu hu"],
+    "soft_rhizome": ["than mem", "than nhun", "goc thoi", "goc mem", "cu mem", "cu thoi", "thoi cu", "nhun", "mui hoi", "thoi re", "re thoi", "cu hu"],
     "stunted": ["coi coc", "lon cham", "khong lon", "chua lon"],
-    "no_blooms": ["khong ra hoa", "khong no hoa", "khong co hoa", "it hoa", "chua ra hoa"],
+    "no_blooms": ["khong ra hoa", "khong ra nut", "khong ra bong", "khong tro hoa", "khong no hoa", "khong co hoa", "it hoa", "chua ra hoa"],
     "distorted_buds": ["nut meo", "nut bien dang", "hoa meo", "vet bac", "nut khong no"],
     "gray_mold": ["moc xam", "moc hoa"],
-    "sticky_insects": ["rep", "chat dinh", "kien bo", "con trung nho"],
+    "sticky_insects": ["rep", "sau bo", "kien", "bo tri", "con trung", "chat dinh", "kien bo", "con trung nho"],
 }
 
 FAQ = [
@@ -242,26 +244,29 @@ def detect_symptoms(message):
 
 
 def offline_reply(message, species=None, symptoms=None):
-    found = list(dict.fromkeys((symptoms or []) + detect_symptoms(message)))
+    """Trả lời dự phòng khi không có AI: bám vào triệu chứng nhắc trong câu hỏi, rồi hỏi thêm để thu hẹp."""
     m = _padded(message)
-    if found:
+    said = detect_symptoms(message)
+    found = list(dict.fromkeys(said + [s for s in (symptoms or []) if s not in said]))
+    if said or (found and not any(_has(m, k) for k, _ in FAQ)):
         dx = diagnose(found, limit=2)
         if dx:
-            lines = ["Dựa trên mô tả, mình thấy có thể là:"]
-            for d in dx:
-                lines.append(f"- **{d['name']}** (khả năng {d['likelihood'].lower()}): {d['cause']}")
+            top = dx[0]
+            mention = "; ".join(SYMPTOMS[s].lower() for s in said) if said else "các triệu chứng bạn đã chọn"
+            lines = [f"Với mô tả \"{mention}\", mình nghĩ nhiều khả năng nhất là **{top['name']}**."]
+            lines.append(top["cause"])
+            if len(dx) > 1:
+                lines.append(f"Cũng có thể là **{dx[1]['name']}**, nên bạn kiểm tra thêm để phân biệt.")
             lines.append("Nên làm trước:")
-            lines += [f"- {s}" for s in dx[0]["treat"][:3]]
-            lines.append("Đây chỉ là gợi ý. Nếu cây xấu đi nhanh, hãy gặp người bán cây hoặc cán bộ bảo vệ thực vật địa phương.")
+            lines += [f"- {t}" for t in top["treat"][:3]]
+            lines.append("Để mình nói chính xác hơn: " + top["check"])
             return "\n".join(lines)
     for keys, answer in FAQ:
         if _has(m, keys):
             return answer
-    if species in SPECIES_CARE:
-        c = SPECIES_CARE[species]
-        return c["summary"] + "\n" + "\n".join(f"- {t}" for t in c["tips"])
-    return ("Mình chưa hiểu rõ câu hỏi. Bạn có thể mô tả triệu chứng (ví dụ lá vàng, củ mềm, không ra hoa), "
-            "hoặc hỏi về tưới nước, ánh sáng, bón phân, chia củ.")
+    return ("Mình chưa hiểu rõ bạn đang gặp vấn đề gì. Bạn mô tả giúp mình cụ thể hơn nhé, ví dụ: "
+            "lá vàng hay đốm nâu, củ có mềm hoặc hôi không, cây bao lâu chưa ra hoa, "
+            "đất thường ướt hay khô. Bạn cũng có thể chọn triệu chứng ở tab Chẩn đoán bệnh.")
 
 
 def system_prompt(species=None, symptoms=None):
