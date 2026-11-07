@@ -174,6 +174,28 @@ canvas{display:block;width:100%;border-radius:14px;background:var(--soft)}
 .compose textarea{min-height:0;height:46px;resize:none;flex:1;border-radius:14px;font:15px/1.5 var(--sans)}
 .mode{font-size:12.5px;color:var(--muted);margin:8px 0 0}
 
+/* vườn */
+.gform{display:grid;gap:12px}
+.gform label{display:grid;gap:4px;font-size:14px;color:var(--muted)}
+.gform input,.gform select{border:1px solid var(--line);background-color:var(--surface);border-radius:12px;padding:10px 12px;color:var(--ink)}
+.gform select{padding-right:40px}
+.plant{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--surface)}
+.plant+.plant{margin-top:12px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.phead h3{font:italic 500 20px/1.2 var(--serif);margin:0}
+.phead small{display:block;color:var(--muted);font-size:13px;font-style:normal;font-family:var(--sans);margin-top:2px}
+.gtask{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.gtask b{font-weight:500}
+.gtask .st{display:block;font-size:13px;color:var(--muted)}
+.gtask .st.late{color:var(--virginica-ink);font-weight:600}
+.gtask .st.now{color:#8A6100;font-weight:600}
+.every{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.every input{width:52px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 6px;text-align:center}
+.todo{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.todo:first-child{border-top:0}
+.todo span small{display:block;color:var(--muted);font-size:13px}
+@media (max-width:520px){.gtask{grid-template-columns:1fr auto}.every{grid-column:1}}
+
 /* batch */
 textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 14px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
 .tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
@@ -217,7 +239,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
     <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true">Nhận diện loài</button>
     <button class="tab" role="tab" id="t-dx" aria-controls="p-dx" aria-selected="false" tabindex="-1">Chẩn đoán bệnh</button>
     <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1">Hỏi chuyên gia</button>
-    <button class="tab" role="tab" id="t-models" aria-controls="p-models" aria-selected="false" tabindex="-1">So sánh mô hình</button>
+    <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1">Vườn của tôi</button>
     <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1">Hàng loạt</button>
   </div>
 
@@ -274,25 +296,42 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
     </div>
   </section>
 
-  <!-- MÔ HÌNH -->
-  <section id="p-models" role="tabpanel" aria-labelledby="t-models" hidden>
+  <!-- VƯỜN -->
+  <section id="p-garden" role="tabpanel" aria-labelledby="t-garden" hidden>
     <div class="grid">
-      <div class="card">
-        <h2>Năm mô hình, cùng một bộ dữ liệu</h2>
-        <p class="sub">Độ chính xác đo bằng kiểm định chéo 5 phần: mỗi mẫu được dự đoán bởi mô hình chưa từng thấy nó. Thanh tính từ mốc 85%. Bấm để chọn mô hình dùng ở các tab khác.</p>
-        <div class="mlist" id="mlist"></div>
-      </div>
       <div class="stack">
         <div class="card">
-          <h2 id="cm-title">Ma trận nhầm lẫn</h2>
-          <p class="sub">Hàng là loài thật, cột là loài mô hình đoán. Ô nằm ngoài đường chéo là dự đoán sai.</p>
-          <div class="cm" id="cm"></div>
+          <h2>Thêm cây vào vườn</h2>
+          <p class="sub">Web sẽ lập lịch tưới nước, bón phân và kiểm tra sâu bệnh cho từng cây.</p>
+          <form id="g-form" class="gform">
+            <label>Tên cây <input id="g-name" maxlength="40" placeholder="Ví dụ: Chậu ban công"></label>
+            <label>Loài
+              <select id="g-sp">
+                <option value="setosa">Iris setosa</option><option value="versicolor">Iris versicolor</option>
+                <option value="virginica">Iris virginica</option><option value="unknown">Chưa biết</option>
+              </select>
+            </label>
+            <label>Nơi trồng
+              <select id="g-place"><option value="pot">Trong chậu</option><option value="ground">Ngoài đất</option></select>
+            </label>
+            <label>Ngày trồng <input id="g-date" type="date"></label>
+            <div class="actions">
+              <button class="btn primary" type="submit">Thêm vào vườn</button>
+              <button class="btn" type="button" id="g-fromid">Dùng loài vừa nhận diện</button>
+              <span class="toast" id="g-toast" role="status"></span>
+            </div>
+          </form>
         </div>
         <div class="card">
-          <h2>Số đo nào quan trọng nhất</h2>
-          <p class="sub">Theo rừng ngẫu nhiên: số đo càng dài thì càng giúp phân biệt loài.</p>
-          <div class="imp" id="imp"></div>
+          <h2>Việc cần làm hôm nay</h2>
+          <div id="g-today"></div>
         </div>
+      </div>
+      <div class="card">
+        <h2>Vườn của tôi</h2>
+        <p class="sub">Số ngày giữa các lần chăm sóc là gợi ý mặc định, bạn có thể chỉnh theo thời tiết và đất của mình.</p>
+        <div id="g-list"></div>
+        <p class="disc">Dữ liệu vườn được lưu ngay trên trình duyệt này, không gửi lên máy chủ. Xóa dữ liệu duyệt web sẽ mất danh sách.</p>
       </div>
     </div>
   </section>
@@ -423,6 +462,7 @@ function selectTab(t){
   tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
   if (t.id==='t-predict') drawMap();
   if (t.id==='t-dx') renderCare();
+  if (t.id==='t-garden') renderGarden();
 }
 tabs.forEach((t,i) => {
   t.addEventListener('click', () => selectTab(t));
@@ -642,38 +682,8 @@ $('#random').addEventListener('click', () => {
   const s = state.info.samples; setValues(s[Math.floor(Math.random()*s.length)].v);
 });
 
-/* ---------- tab mô hình ---------- */
-function renderModels(){
-  const list = $('#mlist'); list.textContent = '';
-  state.info.models.forEach(m => {
-    const b = h('button',{class:'mrow','aria-pressed':m.id===state.model},
-      h('div',{}, h('b',{text:m.name}), h('small',{text:m.desc})),
-      h('div',{class:'acc'}, h('strong',{text:pct(m.cv_mean)}), h('small',{text:'±'+nf1.format(m.cv_std*100)+' điểm %'}), h('div',{class:'bar'}, h('b',{style:`width:${Math.max(4,(m.cv_mean-.85)/.15*100)}%`}))));
-    b.addEventListener('click', () => setModel(m.id));
-    list.append(b);
-  });
-  const m = state.info.models.find(x => x.id===state.model);
-  $('#cm-title').textContent = 'Ma trận nhầm lẫn: ' + m.name;
-  const cm = $('#cm'); cm.textContent = '';
-  cm.append(h('div'));
-  SP.forEach(s => cm.append(h('div',{class:'h',text:'đoán '+s})));
-  m.confusion.forEach((row,i) => {
-    cm.append(h('div',{class:'h l',text:SP[i]}));
-    const tot = row.reduce((a,b) => a+b,0);
-    row.forEach((v,j) => {
-      const ratio = v/tot, good = i===j;
-      const bg = good ? `color-mix(in srgb, var(--${SP[i]}) ${Math.round(ratio*70+8)}%, #fff)` : (v ? `color-mix(in srgb, var(--virginica) ${Math.round(ratio*400+20)}%, #fff)` : 'var(--soft)');
-      cm.append(h('div',{class:'cell',style:`background:${bg};color:${good&&ratio>.5?'#fff':'var(--ink)'}`,text:String(v)}));
-    });
-  });
-  const imp = $('#imp'); imp.textContent = '';
-  const mx = Math.max(...state.info.importance);
-  state.info.importance.map((v,i) => ({v,i})).sort((a,b) => b.v-a.v).forEach(({v,i}) => {
-    imp.append(h('div',{}, h('span',{text:FEATS[i].short}), h('div',{class:'bar'}, h('b',{style:`--w:${v/mx*100}%`})), h('em',{text:pct(v)})));
-  });
-}
 function setModel(id){
-  state.model = id; $('#model').value = id; renderModels(); ensureRegions().then(drawMap); predict();
+  state.model = id; $('#model').value = id; ensureRegions().then(drawMap); predict();
   try{ localStorage.setItem('iris-model', id); }catch(e){}
 }
 $('#model').addEventListener('change', e => setModel(e.target.value));
@@ -869,6 +879,89 @@ function initChat(){
   });
 }
 
+/* ---------- vườn của tôi ---------- */
+const GKEY = 'iris-garden';
+const garden = {plants: []};
+const GSP = {setosa:'Iris setosa', versicolor:'Iris versicolor', virginica:'Iris virginica', unknown:'Chưa rõ loài'};
+const GTASKS = [
+  {id:'water', label:'Tưới nước', note:'Khi lớp đất mặt khô'},
+  {id:'feed',  label:'Bón phân',  note:'Phân ít đạm, nhiều lân và kali'},
+  {id:'check', label:'Kiểm tra sâu bệnh', note:'Xem lá, nụ và củ'},
+];
+const gstore = {
+  get(){ try{ const v = JSON.parse(localStorage.getItem(GKEY)||'[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } },
+  set(v){ try{ localStorage.setItem(GKEY, JSON.stringify(v)); }catch(e){} }
+};
+const dstr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dparse = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, (m||1)-1, d||1); };
+const todayStr = () => dstr(new Date());
+const dayDiff = (a, b) => Math.round((dparse(a) - dparse(b)) / 86400000);
+const dfmt = new Intl.DateTimeFormat('vi-VN');
+function defaultEvery(sp, place){
+  const wet = sp==='versicolor' || sp==='virginica';
+  let water = wet ? 3 : 4; if (place==='pot') water = Math.max(2, water-1);
+  return {water, feed:60, check:7};
+}
+function taskInfo(p, t){
+  const due = dparse(p.last[t.id]); due.setDate(due.getDate() + p.every[t.id]);
+  const left = dayDiff(dstr(due), todayStr());
+  return {left, text: left<0 ? 'Quá hạn '+(-left)+' ngày' : left===0 ? 'Đến hạn hôm nay' : 'Còn '+left+' ngày (đến '+dfmt.format(due)+')', cls: left<0 ? 'late' : left===0 ? 'now' : ''};
+}
+function plantAge(p){
+  const d = dayDiff(todayStr(), p.planted);
+  if (d < 0) return 'Chưa đến ngày trồng';
+  if (d < 31) return 'Trồng được '+d+' ngày';
+  if (d < 365) return 'Trồng được '+Math.floor(d/30)+' tháng';
+  return 'Trồng được '+nf1.format(d/365)+' năm';
+}
+function markDone(p, id){ p.last[id] = todayStr(); gstore.set(garden.plants); renderGarden(); }
+function renderGarden(){
+  const list = $('#g-list'); list.textContent = '';
+  if (!garden.plants.length) list.append(h('p',{class:'empty',text:'Vườn đang trống. Thêm cây đầu tiên ở bên trái.'}));
+  garden.plants.forEach(p => {
+    const del = h('button',{class:'btn sm',type:'button',text:'Xóa','aria-label':'Xóa '+p.name});
+    del.addEventListener('click', () => { if (confirm('Xóa "'+p.name+'" khỏi vườn?')){ garden.plants = garden.plants.filter(x => x.id!==p.id); gstore.set(garden.plants); renderGarden(); } });
+    const split = dparse(p.planted); split.setFullYear(split.getFullYear()+3);
+    const card = h('div',{class:'plant'}, h('div',{class:'phead'},
+      h('div',{}, h('h3',{text:p.name}), h('small',{text:GSP[p.sp]+' · '+(p.place==='pot'?'trong chậu':'ngoài đất')+' · '+plantAge(p)})), del));
+    GTASKS.forEach(t => {
+      const i = taskInfo(p, t);
+      const inp = h('input',{type:'number',min:1,max:365,value:p.every[t.id],'aria-label':'Số ngày giữa các lần '+t.label.toLowerCase()});
+      inp.addEventListener('change', () => { const v = Math.round(Number(inp.value)); if (v>=1 && v<=365){ p.every[t.id] = v; gstore.set(garden.plants); renderGarden(); } else inp.value = p.every[t.id]; });
+      const done = h('button',{class:'btn sm',type:'button',text:'Đã làm'}); done.addEventListener('click', () => markDone(p, t.id));
+      card.append(h('div',{class:'gtask'},
+        h('div',{}, h('b',{text:t.label}), h('span',{class:'st '+i.cls,text:i.text})),
+        h('label',{class:'every'}, 'mỗi', inp, 'ngày'), done));
+    });
+    card.append(h('p',{class:'note',text:'Nên chia củ từ khoảng '+dfmt.format(split)+' (sau 3 năm trồng) để cây tiếp tục ra hoa.'}));
+    list.append(card);
+  });
+  const today = $('#g-today'); today.textContent = '';
+  const due = [];
+  garden.plants.forEach(p => GTASKS.forEach(t => { const i = taskInfo(p, t); if (i.left<=0) due.push({p, t, i}); }));
+  due.sort((a,b) => a.i.left-b.i.left);
+  if (!due.length) today.append(h('p',{class:'empty',text: garden.plants.length ? 'Hôm nay không có việc nào đến hạn. Cây của bạn đang ổn.' : 'Thêm cây để nhận lịch chăm sóc.'}));
+  due.forEach(({p,t,i}) => {
+    const b = h('button',{class:'btn sm primary',type:'button',text:'Đã làm'}); b.addEventListener('click', () => markDone(p, t.id));
+    today.append(h('div',{class:'todo'}, h('span',{}, t.label+' · '+p.name, h('small',{text:i.text+'. '+t.note})), b));
+  });
+}
+$('#g-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const sp = $('#g-sp').value, place = $('#g-place').value, planted = $('#g-date').value || todayStr();
+  const name = $('#g-name').value.trim() || (GSP[sp]+' '+(garden.plants.length+1));
+  if (garden.plants.length >= 50){ $('#g-toast').textContent = 'Vườn đã đầy (tối đa 50 cây).'; return; }
+  garden.plants.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), name, sp, place, planted, every:defaultEvery(sp,place), last:{water:planted, feed:planted, check:planted}});
+  gstore.set(garden.plants); $('#g-name').value = ''; renderGarden();
+  const t = $('#g-toast'); t.textContent = 'Đã thêm "'+name+'"'; setTimeout(() => { t.textContent = ''; }, 2600);
+});
+$('#g-fromid').addEventListener('click', () => {
+  const sp = curSpecies(), t = $('#g-toast');
+  if (sp){ $('#g-sp').value = sp; t.textContent = 'Đã chọn '+GSP[sp]; } else t.textContent = 'Chưa có kết quả nhận diện.';
+  setTimeout(() => { t.textContent = ''; }, 2600);
+});
+function initGarden(){ $('#g-date').value = todayStr(); garden.plants = gstore.get().filter(p => p && p.id && p.every && p.last && p.planted); renderGarden(); }
+
 /* ---------- khởi động ---------- */
 async function boot(){
   try{
@@ -884,8 +977,8 @@ async function boot(){
   try{ const saved = localStorage.getItem('iris-model'); if (saved && state.info.models.some(m => m.id===saved)) state.model = saved; else state.model = state.info.default_model; }catch(e){ state.model = state.info.default_model; }
   sel.value = state.model;
   state.history = store.get().filter(x => x && Array.isArray(x.v) && x.v.length===4 && SP.includes(x.sp));
-  initFlower(); buildSliders(); renderHistory(); renderModels(); tweenFlower();
-  initChat(); loadCare();
+  initFlower(); buildSliders(); renderHistory(); tweenFlower();
+  initChat(); loadCare(); initGarden();
   ensureRegions().then(drawMap);
   predict();
 }
