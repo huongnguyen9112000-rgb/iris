@@ -329,6 +329,26 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
 .carephoto{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;margin:0 0 14px}
 .credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 @media (max-width:820px){.collage{max-width:340px}}
+
+/* tài khoản */
+.top-right{display:flex;align-items:center;gap:10px}
+.acct{display:flex;align-items:center;gap:8px}
+.acct .me{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.acct .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:#fff;font-weight:600}
+.acct .nm{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.acct .nm{display:none}}
+dialog.auth{border:1px solid var(--line);border-radius:24px;padding:24px;background:var(--surface);color:var(--ink);width:calc(100% - 32px);max-width:420px;box-shadow:var(--shadow-hi)}
+dialog.auth::backdrop{background:rgba(20,17,31,.55);backdrop-filter:blur(4px)}
+#auth-form{display:grid;gap:14px}
+.auth-head{display:flex;justify-content:space-between;align-items:center}
+.auth-head h2{font:500 26px var(--serif);margin:0}
+#auth-form label{display:grid;gap:4px;font-size:14px;color:var(--muted)}
+#auth-form input{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--soft);border-radius:99px;padding:4px}
+.seg button{border:0;background:transparent;border-radius:99px;padding:8px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+#auth-err{margin:0}
+.disc .btn{margin-left:6px;vertical-align:baseline}
 </style>
 </head>
 <body>
@@ -338,13 +358,14 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
       <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6A55F0"/><stop offset="1" stop-color="#E0487F"/></linearGradient></defs><g transform="translate(20 21)"><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(60)" fill="url(#lg)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(180)" fill="url(#lg)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(300)" fill="url(#lg)"/><path d="M0 0C3 -3 3 -9 0 -13C-3 -9 -3 -3 0 0Z" fill="#fff" fill-opacity=".85"/></g></svg>
       <span>Iris</span>
     </a>
+    <div class="top-right"><div class="acct" id="acct"></div>
     <details class="adv">
       <summary>Nâng cao</summary>
       <div class="picker">
         <label for="model">Mô hình nhận diện</label>
         <select id="model" disabled><option>Đang tải...</option></select>
       </div>
-    </details>
+    </details></div>
   </header>
 
   <section class="hero" aria-labelledby="hero-h">
@@ -429,20 +450,12 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
         </div>
 
         <div class="card">
-          <h2>Bản đồ 150 mẫu</h2>
-          <p class="sub">Bốn số đo được nén xuống hai trục. Màu nền là vùng mô hình gán cho từng loài.</p>
-          <p class="legend"><span><i class="dot setosa"></i><i style="font-family:var(--serif)">setosa</i></span><span><i class="dot versicolor"></i><i style="font-family:var(--serif)">versicolor</i></span><span><i class="dot virginica"></i><i style="font-family:var(--serif)">virginica</i></span></p>
-          <div class="mapbox"><canvas id="map" aria-label="Bản đồ các mẫu dữ liệu và vị trí mẫu của bạn"></canvas><div class="tip" id="tip" hidden></div></div>
-          <p class="note" id="mapnote"></p>
-        </div>
-
-        <div class="card">
           <div class="head-row">
             <div><h2>Lịch sử</h2><p class="sub">Bấm vào một dòng để nạp lại số đo.</p></div>
             <button class="btn sm" id="clear" hidden>Xóa lịch sử</button>
           </div>
           <ul class="hist" id="hist"></ul>
-          <p class="empty" id="hist-empty">Chưa có mẫu nào. Điều chỉnh số đo rồi chọn Lưu vào lịch sử để so sánh các mẫu trên bản đồ.</p>
+          <p class="empty" id="hist-empty">Chưa có mẫu nào. Điều chỉnh số đo rồi chọn Lưu vào lịch sử để so sánh các lần nhận diện.</p>
         </div>
       </div>
     </div>
@@ -484,7 +497,7 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
         <h2>Vườn của tôi</h2>
         <p class="sub">Số ngày giữa các lần chăm sóc là gợi ý mặc định, bạn có thể chỉnh theo thời tiết và đất của mình.</p>
         <div id="g-list"></div>
-        <p class="disc">Dữ liệu vườn được lưu ngay trên trình duyệt này, không gửi lên máy chủ. Xóa dữ liệu duyệt web sẽ mất danh sách.</p>
+        <p class="disc" id="g-sync"></p>
       </div>
     </div>
   </section>
@@ -554,6 +567,22 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
   <footer>Nhận diện loài dùng mô hình học trên bộ dữ liệu Iris của Fisher (150 mẫu, 3 loài), chỉ đáng tin khi số đo nằm trong phạm vi dữ liệu này. Chẩn đoán bệnh và lời khuyên chỉ mang tính tham khảo.<span class="credits" id="photo-credits" hidden></span></footer>
 </div>
 
+<dialog id="auth" class="auth" aria-labelledby="auth-title">
+  <form id="auth-form" novalidate>
+    <div class="auth-head"><h2 id="auth-title">Đăng nhập</h2><button type="button" class="btn sm" id="auth-close" aria-label="Đóng">Đóng</button></div>
+    <div class="seg" role="group" aria-label="Chọn thao tác">
+      <button type="button" data-mode="login" aria-pressed="true">Đăng nhập</button>
+      <button type="button" data-mode="register" aria-pressed="false">Đăng ký</button>
+    </div>
+    <label id="auth-name-row" hidden>Tên hiển thị <input id="auth-name" maxlength="40" autocomplete="name" placeholder="Ví dụ: Lan"></label>
+    <label>Email <input id="auth-email" type="email" required maxlength="254" autocomplete="email" placeholder="ban@example.com"></label>
+    <label>Mật khẩu <input id="auth-pw" type="password" required maxlength="128" autocomplete="current-password" placeholder="Ít nhất 8 ký tự"></label>
+    <p class="err" id="auth-err" hidden role="alert"></p>
+    <button class="btn primary lg" id="auth-submit" type="submit">Đăng nhập</button>
+    <p class="note" id="auth-note">Đăng nhập để lưu vườn của bạn trên mọi thiết bị. Mật khẩu được mã hóa trước khi lưu.</p>
+  </form>
+</dialog>
+
 <script>
 (() => {
 'use strict';
@@ -593,8 +622,8 @@ const store = {
 };
 
 /* ---------- gọi API ---------- */
-async function api(path, body){
-  const res = await fetch(path, body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : undefined);
+async function api(path, body, method){
+  const res = await fetch(path, body ? {method:method||'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : undefined);
   if (!res.ok){
     let msg = 'Lỗi ' + res.status;
     try{ const j = await res.json(); if (typeof j.detail==='string') msg = j.detail; }catch(e){}
@@ -613,7 +642,6 @@ const clearError = () => { $('#error').hidden = true; };
 const tabs = [...document.querySelectorAll('.tab')];
 function selectTab(t){
   tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
-  if (t.id==='t-predict') drawMap();
   if (t.id==='t-dx') renderCare();
   if (t.id==='t-garden') renderGarden();
 }
@@ -749,61 +777,7 @@ function renderResult(){
   const w = $('#warn');
   if (out.length){ w.textContent = 'Có số đo nằm ngoài phạm vi dữ liệu huấn luyện: ' + out.join('; ') + '. Kết quả kém tin cậy.'; w.hidden = false; } else w.hidden = true;
   renderResultPhoto();
-  drawMap();
 }
-
-/* ---------- bản đồ ---------- */
-const map = {cv:$('#map'), hover:null};
-async function ensureRegions(){
-  if (state.regions[state.model]) return state.regions[state.model];
-  try{ state.regions[state.model] = await api('/api/regions?model='+state.model); }catch(e){ return null; }
-  return state.regions[state.model];
-}
-function toPx(p, b, W, H, pad){
-  return [pad + (p[0]-b[0])/(b[1]-b[0])*(W-2*pad), H - pad - (p[1]-b[2])/(b[3]-b[2])*(H-2*pad)];
-}
-async function drawMap(){
-  if ($('#p-predict').hidden || !state.info) return;
-  const cv = map.cv, dpr = window.devicePixelRatio||1;
-  const W = cv.clientWidth || 400, H = Math.round(W*0.64);
-  cv.style.height = H+'px'; cv.width = W*dpr; cv.height = H*dpr;
-  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
-  const reg = state.regions[state.model];
-  const bounds = reg ? reg.bounds : state.info.bounds;
-  const col = SP.map(s => css('--'+s)), ink = SP.map(s => css('--'+s+'-ink'));
-  if (reg){
-    const cw = W/reg.nx, ch = H/reg.ny; g.globalAlpha = .17;
-    for (let j=0;j<reg.ny;j++) for (let i=0;i<reg.nx;i++){
-      g.fillStyle = col[+reg.cells[j*reg.nx+i]];
-      g.fillRect(i*cw, H-(j+1)*ch, cw+.6, ch+.6);
-    }
-    g.globalAlpha = 1;
-  } else ensureRegions().then(r => r && drawMap());
-  map.pts = state.info.samples.map(s => ({s, xy:toPx(s.p,bounds,W,H,0)}));
-  map.pts.forEach(({s,xy}) => { g.beginPath(); g.arc(xy[0],xy[1],3.6,0,7); g.fillStyle = col[s.s]; g.fill(); g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke(); });
-  state.history.forEach(it => { if (!it.p) return; const xy = toPx(it.p,bounds,W,H,0);
-    g.beginPath(); g.arc(xy[0],xy[1],5.5,0,7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 2.2; g.strokeStyle = ink[SP.indexOf(it.sp)]; g.stroke(); });
-  if (state.result){
-    const r = state.result, k = r.class_id, xy = toPx(r.pca,bounds,W,H,0);
-    g.beginPath(); g.arc(xy[0],xy[1],17,0,7); g.fillStyle = col[k]; g.globalAlpha = .22; g.fill(); g.globalAlpha = 1;
-    g.beginPath(); g.arc(xy[0],xy[1],7.5,0,7); g.fillStyle = col[k]; g.fill(); g.lineWidth = 3; g.strokeStyle = css('--ink'); g.stroke();
-    g.font = '600 13px '+css('--sans'); const label = 'Mẫu của bạn'; const tw = g.measureText(label).width;
-    let lx = xy[0]+14, ly = xy[1]-14; if (lx+tw > W-4) lx = xy[0]-14-tw; if (ly < 14) ly = xy[1]+24;
-    g.lineWidth = 4; g.strokeStyle = 'rgba(251,250,254,.95)'; g.strokeText(label,lx,ly); g.fillStyle = css('--ink'); g.fillText(label,lx,ly);
-  }
-  $('#mapnote').textContent = `Hai trục giữ ${pct(state.info.explained)} thông tin của bốn số đo. Vòng trắng là các mẫu đã lưu.`;
-}
-map.cv.addEventListener('mousemove', e => {
-  if (!map.pts) return;
-  const b = map.cv.getBoundingClientRect(), x = e.clientX-b.left, y = e.clientY-b.top;
-  let best = null, bd = 100;
-  map.pts.forEach(p => { const d = (p.xy[0]-x)**2 + (p.xy[1]-y)**2; if (d < bd){ bd = d; best = p; } });
-  const tip = $('#tip');
-  if (best){ tip.hidden = false; tip.style.left = best.xy[0]+'px'; tip.style.top = best.xy[1]+'px';
-    tip.textContent = SP[best.s.s] + ': ' + best.s.v.map(v => nf1.format(v)).join(' / '); } else tip.hidden = true;
-});
-map.cv.addEventListener('mouseleave', () => { $('#tip').hidden = true; });
-let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawMap, 120); });
 
 /* ---------- lịch sử ---------- */
 function renderHistory(){
@@ -828,16 +802,16 @@ $('#save').addEventListener('click', () => {
   if (!state.result) return;
   state.history.unshift({v:FEATS.map(f => state.values[f.k]), sp:state.result.prediction, p:state.result.pca, t:Date.now()});
   state.history = state.history.slice(0,12);
-  store.set(state.history); renderHistory(); drawMap(); toast('Đã lưu vào lịch sử');
+  store.set(state.history); renderHistory(); toast('Đã lưu vào lịch sử');
 });
-$('#clear').addEventListener('click', () => { state.history = []; store.set([]); renderHistory(); drawMap(); toast('Đã xóa lịch sử'); });
+$('#clear').addEventListener('click', () => { state.history = []; store.set([]); renderHistory(); toast('Đã xóa lịch sử'); });
 document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => setValues(state.info.means[b.dataset.preset])));
 $('#random').addEventListener('click', () => {
   const s = state.info.samples; setValues(s[Math.floor(Math.random()*s.length)].v);
 });
 
 function setModel(id){
-  state.model = id; $('#model').value = id; ensureRegions().then(drawMap); predict();
+  state.model = id; $('#model').value = id; predict();
   try{ localStorage.setItem('iris-model', id); }catch(e){}
 }
 $('#model').addEventListener('change', e => setModel(e.target.value));
@@ -1045,7 +1019,7 @@ const GTASKS = [
 ];
 const gstore = {
   get(){ try{ const v = JSON.parse(localStorage.getItem(GKEY)||'[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } },
-  set(v){ try{ localStorage.setItem(GKEY, JSON.stringify(v)); }catch(e){} }
+  set(v){ try{ localStorage.setItem(GKEY, JSON.stringify(v)); }catch(e){} pushGarden(); }
 };
 const dstr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const dparse = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, (m||1)-1, d||1); };
@@ -1186,6 +1160,90 @@ function renderResultPhoto(){
   fig.hidden = false;
 }
 
+/* ---------- tài khoản ---------- */
+state.user = null;
+const gsync = {t:0};
+function pushGarden(){
+  if (!state.user) return;
+  clearTimeout(gsync.t);
+  gsync.t = setTimeout(async () => {
+    try{ await api('/api/garden', {plants:garden.plants}, 'PUT'); renderGardenSync(true); }
+    catch(e){ if (/đăng nhập/i.test(e.message)){ state.user = null; renderAcct(); } else renderGardenSync(false); }
+  }, 600);
+}
+function renderGardenSync(ok){
+  const box = $('#g-sync'); if (!box) return; box.textContent = '';
+  if (state.user){
+    box.append(ok===false ? 'Chưa đồng bộ được với tài khoản, bản lưu trên máy vẫn còn. Hãy thử lại sau.' : 'Vườn được đồng bộ với tài khoản '+state.user.email+', bạn xem được trên mọi thiết bị.');
+  } else {
+    const b = h('button',{class:'btn sm',type:'button',text:'Đăng nhập'}); b.addEventListener('click', () => openAuth('login'));
+    box.append('Vườn đang chỉ lưu trên trình duyệt này, xóa dữ liệu duyệt web sẽ mất. Đăng nhập để lưu trên mọi thiết bị.', b);
+  }
+}
+function renderAcct(){
+  const box = $('#acct'); box.textContent = '';
+  if (state.user){
+    const out = h('button',{class:'btn sm',type:'button',text:'Đăng xuất'});
+    out.addEventListener('click', logout);
+    box.append(h('span',{class:'me'}, h('span',{class:'av',text:(state.user.name||'?').trim().charAt(0).toUpperCase()}), h('span',{class:'nm',text:state.user.name})), out);
+  } else {
+    const b = h('button',{class:'btn sm',type:'button',text:'Đăng nhập'}); b.addEventListener('click', () => openAuth('login'));
+    const r = h('button',{class:'btn sm primary',type:'button',text:'Đăng ký'}); r.addEventListener('click', () => openAuth('register'));
+    box.append(b, r);
+  }
+  renderGardenSync();
+}
+async function syncGardenFromServer(){
+  try{
+    const server = (await api('/api/garden')).plants || [];
+    const local = gstore.get().filter(p => p && p.id && p.every && p.last && p.planted);
+    const have = new Set(server.map(p => p.id));
+    garden.plants = server.concat(local.filter(p => !have.has(p.id))).slice(0,50);
+    gstore.set(garden.plants); renderGarden(); renderGardenSync(true);
+  }catch(e){ renderGardenSync(false); }
+}
+async function refreshUser(){
+  try{ const r = await api('/api/auth/me'); state.user = r.user || null; }catch(e){ state.user = null; }
+  renderAcct(); if (state.user) syncGardenFromServer();
+}
+async function logout(){
+  try{ await api('/api/auth/logout', {}); }catch(e){}
+  state.user = null; clearTimeout(gsync.t);
+  garden.plants = []; gstore.set([]); renderGarden(); renderAcct();
+}
+const authUI = {mode:'login'};
+function setAuthMode(mode){
+  authUI.mode = mode; const reg = mode==='register';
+  $('#auth-title').textContent = reg ? 'Tạo tài khoản' : 'Đăng nhập';
+  $('#auth-submit').textContent = reg ? 'Đăng ký' : 'Đăng nhập';
+  $('#auth-name-row').hidden = !reg;
+  $('#auth-pw').autocomplete = reg ? 'new-password' : 'current-password';
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode===mode));
+  $('#auth-err').hidden = true;
+}
+function openAuth(mode){
+  setAuthMode(mode||'login'); $('#auth-form').reset();
+  const d = $('#auth'); if (!d.open) d.showModal(); $('#auth-email').focus();
+}
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
+$('#auth-close').addEventListener('click', () => $('#auth').close());
+$('#auth').addEventListener('click', e => { if (e.target===e.currentTarget) e.currentTarget.close(); });
+$('#auth-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#auth-err'), btn = $('#auth-submit'), email = $('#auth-email').value.trim(), pw = $('#auth-pw').value;
+  const fail = m => { err.textContent = m; err.hidden = false; };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return fail('Email không hợp lệ.');
+  if (authUI.mode==='register' && pw.length < 8) return fail('Mật khẩu cần ít nhất 8 ký tự.');
+  if (!pw) return fail('Vui lòng nhập mật khẩu.');
+  err.hidden = true; btn.disabled = true;
+  try{
+    const body = {email, password:pw}; if (authUI.mode==='register') body.name = $('#auth-name').value.trim();
+    const r = await api('/api/auth/'+authUI.mode, body);
+    state.user = r.user; $('#auth').close(); renderAcct(); await syncGardenFromServer();
+  }catch(ex){ fail(ex.message || 'Không kết nối được máy chủ.'); }
+  btn.disabled = false;
+});
+
 /* ---------- khởi động ---------- */
 async function boot(){
   try{
@@ -1202,8 +1260,7 @@ async function boot(){
   sel.value = state.model;
   state.history = store.get().filter(x => x && Array.isArray(x.v) && x.v.length===4 && SP.includes(x.sp));
   initFlower(); buildSliders(); renderHistory(); tweenFlower();
-  initChat(); loadCare(); initGarden(); loadPhotos();
-  ensureRegions().then(drawMap);
+  initChat(); loadCare(); initGarden(); loadPhotos(); refreshUser();
   predict();
 }
 boot();
