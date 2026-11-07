@@ -193,6 +193,10 @@ canvas{display:block;width:100%;border-radius:14px;background:var(--soft)}
 .every input{width:52px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 6px;text-align:center}
 .todo{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
 .todo:first-child{border-top:0}
+.lastdone{margin-top:4px}
+.lastdone input{width:auto;padding:3px 6px;font:inherit;font-size:13px}
+#g-undo:empty{display:none}
+#g-undo{margin:0 0 8px}
 .todo span small{display:block;color:var(--muted);font-size:13px}
 @media (max-width:520px){.gtask{grid-template-columns:1fr auto}.every{grid-column:1}}
 
@@ -324,6 +328,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
         </div>
         <div class="card">
           <h2>Việc cần làm hôm nay</h2>
+          <p class="toast" id="g-undo" role="status"></p>
           <div id="g-today"></div>
         </div>
       </div>
@@ -881,7 +886,7 @@ function initChat(){
 
 /* ---------- vườn của tôi ---------- */
 const GKEY = 'iris-garden';
-const garden = {plants: []};
+const garden = {plants: [], undo:null};
 const GSP = {setosa:'Iris setosa', versicolor:'Iris versicolor', virginica:'Iris virginica', unknown:'Chưa rõ loài'};
 const GTASKS = [
   {id:'water', label:'Tưới nước', note:'Khi lớp đất mặt khô'},
@@ -914,7 +919,15 @@ function plantAge(p){
   if (d < 365) return 'Trồng được '+Math.floor(d/30)+' tháng';
   return 'Trồng được '+nf1.format(d/365)+' năm';
 }
-function markDone(p, id){ p.last[id] = todayStr(); gstore.set(garden.plants); renderGarden(); }
+function markDone(p, id){
+  garden.undo = {pid:p.id, id, prev:p.last[id]};
+  p.last[id] = todayStr(); gstore.set(garden.plants); renderGarden();
+}
+function undoDone(){
+  const u = garden.undo; garden.undo = null; if (!u) return;
+  const p = garden.plants.find(x => x.id===u.pid); if (p){ p.last[u.id] = u.prev; gstore.set(garden.plants); }
+  renderGarden();
+}
 function renderGarden(){
   const list = $('#g-list'); list.textContent = '';
   if (!garden.plants.length) list.append(h('p',{class:'empty',text:'Vườn đang trống. Thêm cây đầu tiên ở bên trái.'}));
@@ -928,21 +941,30 @@ function renderGarden(){
       const i = taskInfo(p, t);
       const inp = h('input',{type:'number',min:1,max:365,value:p.every[t.id],'aria-label':'Số ngày giữa các lần '+t.label.toLowerCase()});
       inp.addEventListener('change', () => { const v = Math.round(Number(inp.value)); if (v>=1 && v<=365){ p.every[t.id] = v; gstore.set(garden.plants); renderGarden(); } else inp.value = p.every[t.id]; });
-      const done = h('button',{class:'btn sm',type:'button',text:'Đã làm'}); done.addEventListener('click', () => markDone(p, t.id));
+      const done = h('button',{class:'btn sm',type:'button',text:'Làm xong hôm nay'}); done.addEventListener('click', () => markDone(p, t.id));
+      const ld = h('input',{type:'date',value:p.last[t.id],max:todayStr(),min:p.planted,'aria-label':'Ngày '+t.label.toLowerCase()+' lần cuối'});
+      ld.addEventListener('change', () => { if (ld.value && ld.value<=todayStr()){ p.last[t.id] = ld.value; gstore.set(garden.plants); renderGarden(); } else ld.value = p.last[t.id]; });
       card.append(h('div',{class:'gtask'},
-        h('div',{}, h('b',{text:t.label}), h('span',{class:'st '+i.cls,text:i.text})),
+        h('div',{}, h('b',{text:t.label}), h('span',{class:'st '+i.cls,text:i.text}),
+          h('label',{class:'every lastdone'}, p.last[t.id]===p.planted ? 'Chưa làm lần nào, tính từ ngày trồng' : 'Làm lần cuối', ld)),
         h('label',{class:'every'}, 'mỗi', inp, 'ngày'), done));
     });
     card.append(h('p',{class:'note',text:'Nên chia củ từ khoảng '+dfmt.format(split)+' (sau 3 năm trồng) để cây tiếp tục ra hoa.'}));
     list.append(card);
   });
+  const ub = $('#g-undo'); ub.textContent = '';
+  if (garden.undo){
+    const u = garden.undo, pl = garden.plants.find(x => x.id===u.pid), tk = GTASKS.find(x => x.id===u.id);
+    if (pl && tk){ const b = h('button',{class:'btn sm',type:'button',text:'Hoàn tác'}); b.addEventListener('click', undoDone);
+      ub.append('Đã ghi "'+tk.label+'" cho '+pl.name+'. Bấm nhầm? ', b); }
+  }
   const today = $('#g-today'); today.textContent = '';
   const due = [];
   garden.plants.forEach(p => GTASKS.forEach(t => { const i = taskInfo(p, t); if (i.left<=0) due.push({p, t, i}); }));
   due.sort((a,b) => a.i.left-b.i.left);
   if (!due.length) today.append(h('p',{class:'empty',text: garden.plants.length ? 'Hôm nay không có việc nào đến hạn. Cây của bạn đang ổn.' : 'Thêm cây để nhận lịch chăm sóc.'}));
   due.forEach(({p,t,i}) => {
-    const b = h('button',{class:'btn sm primary',type:'button',text:'Đã làm'}); b.addEventListener('click', () => markDone(p, t.id));
+    const b = h('button',{class:'btn sm primary',type:'button',text:'Làm xong'}); b.addEventListener('click', () => markDone(p, t.id));
     today.append(h('div',{class:'todo'}, h('span',{}, t.label+' · '+p.name, h('small',{text:i.text+'. '+t.note})), b));
   });
 }
