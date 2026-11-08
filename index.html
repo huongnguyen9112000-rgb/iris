@@ -3,504 +3,1394 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Iris AI Studio — Hệ Thống Nhận Diện & Chăm Sóc Diên Vĩ</title>
-<meta name="description" content="Nền tảng học máy phân loại loài hoa Iris và trợ lý bác sĩ cây cảnh AI thông minh.">
+<title>Iris - Nhận diện loài hoa</title>
+<meta name="description" content="Nhập bốn số đo của một bông diên vĩ, mô hình học máy cho biết đó là loài nào.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg-main: #f8fafc;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --bg-sidebar: #0f172a;
-  --border-color: rgba(226, 232, 240, 0.8);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #e0e7ff;
-  
-  --setosa: #6366f1;
-  --setosa-bg: #e0e7ff;
-  --versicolor: #10b981;
-  --versicolor-bg: #d1fae5;
-  --virginica: #f43f5e;
-  --virginica-bg: #ffe4e6;
-
-  --c-theme: var(--primary);
-  --c-theme-bg: var(--primary-light);
-
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --radius: 16px;
-  --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
-  --shadow-lg: 0 20px 35px -10px rgba(99, 102, 241, 0.15);
+:root{
+  color-scheme: light;
+  --bg:#ECEAF4; --surface:#FBFAFE; --ink:#26223F; --muted:#67637F; --line:#DAD6EA; --soft:#F2F0F9;
+  --setosa:#6A55F0; --setosa-ink:#4433BF; --setosa-tint:#E6E2FD;
+  --versicolor:#1AA394; --versicolor-ink:#0D6B60; --versicolor-tint:#D8F0EC;
+  --virginica:#E0487F; --virginica-ink:#B01F5A; --virginica-tint:#FBDCE7;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --c:#8E8AAB; --c-ink:#4A4668; --c-tint:#E9E7F3;
 }
+[data-species=setosa]{--c:var(--setosa);--c-ink:var(--setosa-ink);--c-tint:var(--setosa-tint)}
+[data-species=versicolor]{--c:var(--versicolor);--c-ink:var(--versicolor-ink);--c-tint:var(--versicolor-tint)}
+[data-species=virginica]{--c:var(--virginica);--c-ink:var(--virginica-ink);--c-tint:var(--virginica-tint)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--setosa);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 64px}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-main: #0b0f19;
-    --bg-card: rgba(18, 24, 38, 0.75);
-    --bg-sidebar: #050811;
-    --border-color: rgba(255, 255, 255, 0.08);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    
-    --setosa-bg: rgba(99, 102, 241, 0.15);
-    --versicolor-bg: rgba(16, 185, 129, 0.15);
-    --virginica-bg: rgba(244, 63, 94, 0.15);
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px;padding:36px 0 20px}
+.brand h1{font:italic 500 40px/1 var(--serif);letter-spacing:-.02em;margin:0 0 8px}
+.brand p{margin:0;color:var(--muted);max-width:44ch}
+.picker{display:flex;flex-direction:column;gap:4px;min-width:220px}
+.picker label{font-size:14px;color:var(--muted)}
+select{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2367637F' stroke-width='1.8'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;border:1px solid var(--line);border-radius:12px;padding:11px 40px 11px 14px;cursor:pointer}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
+.tab{background:none;border:0;padding:12px 16px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+[hidden]{display:none!important}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px}
+.card h2{font:500 22px/1.2 var(--serif);margin:0 0 4px;letter-spacing:-.01em}
+.card .sub{margin:0 0 18px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+.stack{display:grid;gap:20px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* stage */
+.stage{background:var(--c-tint);border-color:transparent;transition:background-color .5s}
+.stage svg{display:block;width:100%;max-width:420px;margin:0 auto;height:auto}
+.fall{fill:var(--c);transition:fill .5s;stroke:var(--c-ink);stroke-opacity:.35;stroke-width:1}
+.std{fill:color-mix(in srgb,var(--c) 42%,#fff);transition:fill .5s;stroke:var(--c-ink);stroke-opacity:.4;stroke-width:1}
+.patch{fill:#F4C95D}
+.hub{fill:#fff;opacity:.9}
+.cap{text-align:center;font-size:13px;color:var(--c-ink);margin:6px 0 0;opacity:.85}
+.result{margin-top:18px;text-align:center}
+.card .species{font:italic 500 46px/1.05 var(--serif);letter-spacing:-.02em;color:var(--c-ink);margin:0;transition:color .5s}
+.card .species small{font:400 20px var(--serif);font-style:normal;color:var(--muted);margin-right:6px}
+.conf{margin:6px 0 0;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;background:rgba(255,255,255,.65);border-radius:99px;padding:4px 10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.dot.setosa{background:var(--setosa)}.dot.versicolor{background:var(--versicolor)}.dot.virginica{background:var(--virginica)}
+.agree{margin:12px 0 0;font-size:14px;color:var(--ink)}
+.warn{margin:14px 0 0;padding:10px 12px;background:#FFF4D6;border-radius:12px;font-size:14px;color:#6B4E00;text-align:left}
+.probs{margin-top:18px;display:grid;gap:8px;text-align:left}
+.prob{display:grid;grid-template-columns:92px 1fr 52px;align-items:center;gap:10px;font-size:14px}
+.prob i{font-family:var(--serif)}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.7);overflow:hidden}
+.bar b{display:block;height:100%;border-radius:99px;width:0;transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.prob em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+
+/* controls */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:500;transition:background-color .15s,border-color .15s}
+.btn:hover{background:var(--soft);border-color:#C6C1DD}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#3A3560}
+.btn.sm{padding:5px 11px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:default}
+.row{padding:14px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0;padding-top:0}
+.row-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+.row-top label{font-weight:500}
+.row-top label span{color:var(--muted);font-weight:400;font-size:14px;margin-left:6px}
+.num{display:flex;align-items:baseline;gap:4px}
+.num input{width:68px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums}
+.num span{color:var(--muted);font-size:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(to right,var(--c) var(--pct,50%),var(--line) var(--pct,50%))}
+input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:99px;background:var(--c)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--c-ink);margin-top:-8px;transition:border-color .5s}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--c-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px;border-top:1px solid var(--line);padding-top:18px}
+.toast{font-size:14px;color:var(--muted);min-height:1.5em}
+
+/* map */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.mapbox{position:relative}
+canvas{display:block;width:100%;border-radius:14px;background:var(--soft)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-130%)}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+
+/* history */
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.hist li{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer}
+.hist li:hover{background:var(--soft)}
+.hist .sp{font-family:var(--serif);font-style:italic;min-width:86px}
+.hist .vals{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;flex:1}
+.hist time{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+
+/* models tab */
+.mlist{display:grid;gap:8px}
+.mrow{display:grid;grid-template-columns:1fr 150px;gap:6px 16px;align-items:center;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer}
+.mrow:hover{border-color:#BDB7D8}
+.mrow[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.mrow b{font-weight:600}
+.mrow small{display:block;color:var(--muted);font-size:13.5px;line-height:1.4;margin-top:2px}
+.acc{text-align:right}
+.acc strong{font:500 24px var(--serif);font-variant-numeric:tabular-nums}
+.acc .bar{background:var(--line);margin-top:4px}
+.acc .bar b{background:var(--ink)}
+.cm{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:14px;margin-top:6px}
+.cm .h{color:var(--muted);text-align:center;font-size:13px;padding:2px}
+.cm .h.l{text-align:right;padding-right:8px;align-self:center;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink)}
+.cm .cell{aspect-ratio:1.5;display:grid;place-items:center;border-radius:10px;font:500 20px var(--serif);font-variant-numeric:tabular-nums}
+.imp{display:grid;gap:10px;margin-top:6px}
+.imp div{display:grid;grid-template-columns:130px 1fr 44px;gap:10px;align-items:center;font-size:14px}
+.imp .bar{background:var(--line)}.imp .bar b{background:var(--setosa-ink);width:var(--w)}
+.imp em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+.axis-tag{font-size:13px;color:var(--muted);margin:0}
+
+/* chẩn đoán + chat */
+.sgroup{margin:0 0 16px}
+.sgroup h3{font:600 14px var(--sans);color:var(--muted);margin:0 0 8px}
+.schips{display:flex;flex-wrap:wrap;gap:8px}
+.schips .btn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dx{border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:10px;background:var(--surface)}
+.dx+.dx{margin-top:12px}
+.dx h3{font:500 20px/1.2 var(--serif);margin:0}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:12.5px;border-radius:99px;padding:3px 10px;background:var(--soft);color:var(--ink)}
+.badge.hi{background:var(--virginica-tint);color:var(--virginica-ink)}
+.badge.mid{background:#FFF4D6;color:#6B4E00}
+.badge.lo{background:var(--versicolor-tint);color:var(--versicolor-ink)}
+.dx h4{font:600 13px var(--sans);color:var(--muted);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.dx ul,.care ul{margin:0;padding-left:20px}
+.dx li,.care li{margin:3px 0}
+.dx p{margin:0}
+.disc{font-size:13px;color:var(--muted);background:var(--soft);border-radius:12px;padding:10px 12px;margin:14px 0 0}
+.care h3{font:italic 500 20px var(--serif);margin:0 0 4px}
+.care p{margin:0 0 8px;color:var(--muted)}
+.chat{display:flex;flex-direction:column;height:min(620px,70vh)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px}
+.bub{max-width:86%;padding:10px 14px;border-radius:16px;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
+.bub.me{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+.bub.bot{align-self:flex-start;background:var(--soft);border-bottom-left-radius:4px}
+.bub ul{margin:6px 0 0;padding-left:18px}
+.bub p{margin:0}.bub p+p{margin-top:6px}
+.bub.typing{color:var(--muted);font-style:italic}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.compose{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.compose textarea{min-height:0;height:46px;resize:none;flex:1;border-radius:14px;font:15px/1.5 var(--sans)}
+.mode{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+
+/* vườn */
+.gform{display:grid;gap:12px}
+.gform label{display:grid;gap:4px;font-size:14px;color:var(--muted)}
+.gform input,.gform select{border:1px solid var(--line);background-color:var(--surface);border-radius:12px;padding:10px 12px;color:var(--ink)}
+.gform select{padding-right:40px}
+.plant{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--surface)}
+.plant+.plant{margin-top:12px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.phead h3{font:italic 500 20px/1.2 var(--serif);margin:0}
+.phead small{display:block;color:var(--muted);font-size:13px;font-style:normal;font-family:var(--sans);margin-top:2px}
+.gtask{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.gtask b{font-weight:500}
+.gtask .st{display:block;font-size:13px;color:var(--muted)}
+.gtask .st.late{color:var(--virginica-ink);font-weight:600}
+.gtask .st.now{color:#8A6100;font-weight:600}
+.every{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.every input{width:52px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 6px;text-align:center}
+.todo{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.todo:first-child{border-top:0}
+.lastdone{margin-top:4px}
+.lastdone input{width:auto;padding:3px 6px;font:inherit;font-size:13px}
+#g-undo:empty{display:none}
+#g-undo{margin:0 0 8px}
+.todo span small{display:block;color:var(--muted);font-size:13px}
+@media (max-width:520px){.gtask{grid-template-columns:1fr auto}.every{grid-column:1}}
+
+/* batch */
+textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 14px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.sum{display:flex;flex-wrap:wrap;gap:8px 24px;margin:4px 0 16px}
+.sum div{display:flex;flex-direction:column}
+.sum strong{font:500 28px/1.1 var(--serif);font-variant-numeric:tabular-nums}
+.sum span{font-size:13px;color:var(--muted)}
+.twrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap}
+th{font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);background:var(--soft)}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+td i{font-family:var(--serif)}
+.ok{color:var(--versicolor-ink)}.bad{color:var(--virginica-ink)}
+.err{background:#FDE7EC;color:#7A1534;border-radius:14px;padding:14px 16px;font-size:14px;margin:0 0 16px}
+.err button{margin-left:8px}
+.load{color:var(--muted)}
+footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:520px){.brand h1{font-size:34px}.species{font-size:38px}.prob{grid-template-columns:78px 1fr 48px}.mrow{grid-template-columns:1fr}.acc{text-align:left}.imp div{grid-template-columns:100px 1fr 40px}}
+
+/* ================= giao diện nâng cấp ================= */
+:root{
+  color-scheme: light dark;
+  --on-ink:#fff;
+  --brand:linear-gradient(120deg,#6A55F0 0%,#9B52E0 55%,#E0487F 100%);
+  --shadow:0 1px 2px rgba(38,34,63,.05),0 12px 32px -14px rgba(38,34,63,.22);
+  --shadow-hi:0 2px 4px rgba(38,34,63,.06),0 18px 40px -14px rgba(106,85,240,.35);
+  --chip-bg:rgba(255,255,255,.7); --bar-bg:rgba(255,255,255,.75);
+  --warn-bg:#FFF4D6; --warn-ink:#6B4E00; --err-bg:#FDE7EC; --err-ink:#7A1534; --now:#8A6100;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#110F1B; --surface:#1B1829; --ink:#EFEBFB; --muted:#A8A3C6; --line:#332F4B; --soft:#242038;
+    --setosa:#8573FF; --setosa-ink:#B8AEFF; --setosa-tint:#272250;
+    --versicolor:#2DC4B0; --versicolor-ink:#6FE3D3; --versicolor-tint:#12302D;
+    --virginica:#F0598F; --virginica-ink:#FF93B8; --virginica-tint:#3E1D2E;
+    --c-ink:#B8AEFF;
+    --on-ink:#14111F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -14px rgba(0,0,0,.65);
+    --shadow-hi:0 2px 4px rgba(0,0,0,.4),0 18px 40px -14px rgba(133,115,255,.45);
+    --chip-bg:rgba(255,255,255,.09); --bar-bg:rgba(255,255,255,.12);
+    --warn-bg:#3A2F10; --warn-ink:#FFD98A; --err-bg:#401B28; --err-ink:#FFB5C8; --now:#F2C464;
   }
+  .btn:hover{border-color:#524C7A}
 }
+body{background:
+  radial-gradient(900px 460px at 88% -120px,rgba(106,85,240,.20),transparent 70%),
+  radial-gradient(760px 420px at -8% 4%,rgba(224,72,127,.12),transparent 70%),
+  var(--bg);min-height:100vh}
+.chip{background:var(--chip-bg)} .bar{background:var(--bar-bg)}
+.warn,.badge.mid{background:var(--warn-bg);color:var(--warn-ink)}
+.err{background:var(--err-bg);color:var(--err-ink)}
+.gtask .st.now{color:var(--now)}
+.tip{color:var(--on-ink)}
 
-[data-species=setosa] { --c-theme: var(--setosa); --c-theme-bg: var(--setosa-bg); }
-[data-species=versicolor] { --c-theme: var(--versicolor); --c-theme-bg: var(--versicolor-bg); }
-[data-species=virginica] { --c-theme: var(--virginica); --c-theme-bg: var(--virginica-bg); }
+/* top bar */
+header.top{display:flex;align-items:center;justify-content:space-between;padding:20px 0 4px}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:italic 500 28px/1 var(--serif);letter-spacing:-.02em}
+.adv{position:relative;font-size:14px}
+.adv summary{list-style:none;cursor:pointer;color:var(--muted);padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+.adv summary::-webkit-details-marker{display:none}
+.adv summary:hover{color:var(--ink)}
+.adv .picker{position:absolute;right:0;top:calc(100% + 8px);z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow-hi)}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  display: flex;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:24px;align-items:center;padding:28px 0 36px}
+.eyebrow{display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:99px;font-size:13px;font-weight:600;color:var(--setosa-ink);background:var(--setosa-tint)}
+.hero h1{font:500 clamp(36px,5.2vw,60px)/1.04 var(--serif);letter-spacing:-.025em;margin:0 0 16px}
+.hero h1 em{font-style:italic;background:var(--brand);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 22px}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.btn.lg{padding:12px 20px;font-size:15px}
+.stats{list-style:none;display:flex;flex-wrap:wrap;gap:12px 32px;margin:28px 0 0;padding:0}
+.stats li{display:flex;flex-direction:column}
+.stats b{font:500 30px/1 var(--serif);letter-spacing:-.02em}
+.stats span{font-size:13px;color:var(--muted);margin-top:4px}
+.hero-art svg{display:block;width:100%;max-width:360px;margin:0 auto;height:auto;filter:drop-shadow(0 22px 30px rgba(106,85,240,.28))}
+@media (prefers-reduced-motion:no-preference){.sway{transform-origin:0 0;animation:sway 9s ease-in-out infinite}@keyframes sway{50%{transform:rotate(6deg)}}}
+@media (max-width:820px){.hero{grid-template-columns:1fr;padding-top:12px}.hero-art{order:-1}.hero-art svg{max-width:230px}}
 
-/* Sidebar Layout */
-.app-container { display: flex; width: 100vw; min-height: 100vh; }
-.sidebar {
-  width: 260px;
-  background: var(--bg-sidebar);
-  color: #fff;
-  padding: 28px 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 600;
-  color: #fff;
-  text-decoration: none;
-  margin-bottom: 36px;
-}
-.brand-logo svg { fill: var(--primary); width: 32px; height: 32px; }
+/* tabs */
+.tabs{position:sticky;top:0;z-index:10;gap:6px;padding:10px 0;margin:0 0 24px;border-bottom:0;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.tab{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid transparent;border-radius:99px;margin:0}
+.tab .ti{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tab:hover{background:var(--soft)}
+.tab[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow)}
+.tab[aria-selected="true"] .ti{stroke:var(--setosa-ink)}
 
-.nav-tabs { display: flex; flex-direction: column; gap: 8px; }
-.nav-tab {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-.nav-tab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
-.nav-tab:hover { background: rgba(255,255,255,0.05); color: #fff; }
-.nav-tab[aria-selected="true"] {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
-}
+/* cards + buttons */
+.card{border-radius:24px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.card h2{font-size:24px}
+.btn{transition:background-color .15s,border-color .15s,transform .15s,box-shadow .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px rgba(106,85,240,.55)}
+.btn.primary:hover{background:var(--brand);filter:brightness(1.07);box-shadow:var(--shadow-hi)}
+.schips .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:transparent}
+.bub.me{background:var(--brand);color:#fff}
+.stage{background:radial-gradient(420px 300px at 50% 24%,color-mix(in srgb,var(--c) 22%,transparent),transparent 72%),var(--c-tint)}
+.stage svg{max-width:460px;filter:drop-shadow(0 14px 22px color-mix(in srgb,var(--c) 30%,transparent))}
+.card .species{font-size:52px}
+.dx,.plant{box-shadow:var(--shadow)}
+.dx:hover,.plant:hover{box-shadow:var(--shadow-hi)}
+input[type=range]::-webkit-slider-thumb{box-shadow:0 2px 8px rgba(0,0,0,.25)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
+.wrap{padding-bottom:80px}
+@media (max-width:520px){header.top{padding-top:14px}.hero h1{font-size:34px}.lead{font-size:16px}.btn.lg{padding:11px 16px}.card{padding:20px;border-radius:20px}.stats{gap:10px 18px}.stats b{font-size:24px}.stats span{font-size:12px}}
 
-/* Main Content Area */
-.main-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  height: 100vh;
-}
-.header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 36px;
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header-title h2 { font-size: 20px; font-weight: 700; }
-.header-controls { display: flex; align-items: center; gap: 16px; }
+/* ảnh hoa thật */
+.hero-art.photo{max-width:none}
+.collage{display:grid;gap:12px;grid-template-columns:1.25fr 1fr;grid-template-rows:1fr 1fr;aspect-ratio:1/1;max-width:460px;margin:0 auto}
+.collage figure{position:relative;margin:0;overflow:hidden;border-radius:22px;box-shadow:var(--shadow-hi);background:var(--soft)}
+.collage img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s}
+.collage figure:hover img{transform:scale(1.05)}
+.collage figcaption{position:absolute;left:10px;bottom:10px;font:italic 500 14px var(--serif);color:#fff;padding:4px 11px;border-radius:99px;background:rgba(20,16,36,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.collage.n3 figure:first-child{grid-row:span 2}
+.collage.n2{grid-template-rows:1fr}
+.collage.n1{grid-template-columns:1fr;grid-template-rows:1fr;aspect-ratio:4/5;max-width:380px}
+.stage.has-photo svg,.stage.has-photo .cap{display:none}
+.stage.has-photo .rphoto{margin:0 0 4px;box-shadow:var(--shadow)}
+.stage.has-photo .rphoto img{aspect-ratio:4/3}
+.rphoto{margin:16px 0 0;border-radius:18px;overflow:hidden;position:relative}
+.rphoto img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
+.rphoto figcaption{position:absolute;left:10px;bottom:10px;font-size:12.5px;color:#fff;padding:3px 10px;border-radius:99px;background:rgba(20,16,36,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.carephoto{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;margin:0 0 14px}
+.credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:820px){.collage{max-width:340px}}
 
-.content-body { padding: 32px 36px; flex: 1; }
+/* tài khoản */
+.top-right{display:flex;align-items:center;gap:10px}
+.acct{display:flex;align-items:center;gap:8px}
+.acct .me{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.acct .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:#fff;font-weight:600}
+.acct .nm{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.acct .nm{display:none}}
+dialog.auth{border:1px solid var(--line);border-radius:24px;padding:24px;background:var(--surface);color:var(--ink);width:calc(100% - 32px);max-width:420px;box-shadow:var(--shadow-hi)}
+dialog.auth::backdrop{background:rgba(20,17,31,.55);backdrop-filter:blur(4px)}
+#auth-form{display:grid;gap:14px}
+.auth-head{display:flex;justify-content:space-between;align-items:center}
+.auth-head h2{font:500 26px var(--serif);margin:0}
+#auth-form label{display:grid;gap:4px;font-size:14px;color:var(--muted)}
+#auth-form input{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--soft);border-radius:99px;padding:4px}
+.seg button{border:0;background:transparent;border-radius:99px;padding:8px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+#auth-err{margin:0}
+.disc .btn{margin-left:6px;vertical-align:baseline}
 
-/* Grid & Cards */
-.grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-@media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
+/* ================= kiểu tạp chí: tiệm hoa ================= */
+:root{
+  --bg:#F3EEE3; --surface:#FBF8F1; --ink:#1E2B24; --muted:#5E675F; --line:#D8CFBD; --soft:#EAE3D2;
+  --accent:#264636; --on-accent:#F6F1E6; --clay:#B4532F;
+  --setosa:#5A5FA8; --setosa-ink:#3F4487; --setosa-tint:#E3E3F1;
+  --versicolor:#3F7D6B; --versicolor-ink:#2A5C4D; --versicolor-tint:#DDEAE3;
+  --virginica:#B24E69; --virginica-ink:#8E3550; --virginica-tint:#F2DDE2;
+  --c:#8A8F86; --c-ink:#3D463F; --c-tint:#E8E3D4;
+  --brand:var(--accent); --on-ink:var(--on-accent);
+  --shadow:none; --shadow-hi:none;
+  --chip-bg:rgba(255,255,255,.55); --bar-bg:rgba(30,43,36,.1);
+  --warn-bg:#F4E7C6; --warn-ink:#5B4300; --err-bg:#F3DAD2; --err-ink:#6E2410; --now:#8A5A00;
+  --rad:3px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141A16; --surface:#1B231E; --ink:#EDE8DA; --muted:#A5AC9C; --line:#33403A; --soft:#222B25;
+    --accent:#D7E6CC; --on-accent:#16201A; --clay:#E08A63;
+    --setosa:#8F94E0; --setosa-ink:#B9BDF5; --setosa-tint:#232547;
+    --versicolor:#5FB59E; --versicolor-ink:#86D4BE; --versicolor-tint:#14302A;
+    --virginica:#E07C99; --virginica-ink:#F4A3B8; --virginica-tint:#3A1E28;
+    --c:#8A8F86; --c-ink:#C9D0C2; --c-tint:#222B25;
+    --chip-bg:rgba(255,255,255,.07); --bar-bg:rgba(237,232,218,.14);
+    --warn-bg:#3A2F10; --warn-ink:#FFD98A; --err-bg:#401B28; --err-ink:#FFB5C8; --now:#F2C464;
+  }
+  .btn:hover{border-color:var(--muted)}
+}
+[data-species=setosa]{--c:var(--setosa);--c-ink:var(--setosa-ink);--c-tint:var(--setosa-tint)}
+[data-species=versicolor]{--c:var(--versicolor);--c-ink:var(--versicolor-ink);--c-tint:var(--versicolor-tint)}
+[data-species=virginica]{--c:var(--virginica);--c-ink:var(--virginica-ink);--c-tint:var(--virginica-tint)}
+body{background:var(--bg)}
+:focus-visible{outline:2px solid var(--clay);outline-offset:2px;border-radius:2px}
 
-.card {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 24px;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.card-header { margin-bottom: 20px; }
-.card-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-.card-subtitle { font-size: 13px; color: var(--text-muted); }
+.wrap{max-width:1120px}
+header.top{padding:22px 0 14px;border-bottom:1px solid var(--ink)}
+.logo{color:var(--ink);font:500 30px/1 var(--serif);letter-spacing:-.02em;gap:12px;font-style:normal}
+.logo .mark{color:var(--clay)}
+.logo small{display:block;font:500 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.adv summary{border-radius:var(--rad);background:transparent;border-color:var(--ink);color:var(--ink)}
+.adv .picker{border-radius:var(--rad)}
+.acct .av{background:var(--accent);color:var(--on-accent)}
 
-/* Interactive Visualization Stage */
-.stage {
-  background: var(--c-theme-bg);
-  border-radius: var(--radius);
-  padding: 24px;
-  text-align: center;
-  position: relative;
-  transition: background 0.4s ease;
-}
-.stage svg { max-width: 320px; height: auto; margin: 0 auto; display: block; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
-.stage .species-title {
-  font-family: var(--font-serif);
-  font-size: 42px;
-  font-style: italic;
-  color: var(--c-theme);
-  margin-top: 12px;
-}
-.stage .confidence-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  background: rgba(255,255,255,0.8);
-  border-radius: 99px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-top: 6px;
-}
+.hero{padding:44px 0 48px;gap:48px;border-bottom:1px solid var(--line);align-items:center}
+.eyebrow{background:none;color:var(--clay);padding:0;border-radius:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:36px;height:1px;background:var(--clay)}
+.hero h1{font:400 clamp(42px,6vw,76px)/1 var(--serif);letter-spacing:-.035em}
+.hero h1 em{background:none;-webkit-background-clip:initial;background-clip:initial;color:var(--clay);font-style:italic;font-weight:400}
+.lead{font-size:18px;line-height:1.6;color:var(--muted)}
+.stats{margin-top:32px;padding-top:18px;border-top:1px solid var(--ink);gap:12px 40px}
+.stats b{font:400 34px/1 var(--serif);color:var(--ink)}
+.stats span{text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.hero-art svg{filter:none;max-width:380px}
+.sway{animation:none!important}
 
-/* Sliders Form */
-.slider-group { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
-.row-control { display: flex; flex-direction: column; gap: 8px; }
-.row-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
-.row-label span { color: var(--text-muted); font-weight: 400; font-size: 12px; }
-.input-wrap { display: flex; align-items: center; gap: 12px; }
-input[type=range] {
-  flex: 1;
-  height: 6px;
-  border-radius: 99px;
-  appearance: none;
-  background: var(--border-color);
-  outline: none;
-}
-input[type=range]::-webkit-slider-thumb {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 3px solid #fff;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-input[type=number] {
-  width: 70px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-main);
-  color: var(--text-main);
-  font-weight: 600;
-  text-align: center;
-}
+.plate .pl-frame{fill:var(--surface);stroke:var(--ink);stroke-width:1}
+.plate .pl-inner{fill:none;stroke:var(--line);stroke-width:1}
+.plate .pl-tx{font:500 12px var(--sans);fill:var(--muted)}
+.plate .pl-tx.caps{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.plate .pl-tx.cap{font:italic 400 14px var(--serif);fill:var(--ink)}
+.plate .pl-fall{fill:var(--setosa-tint);stroke:var(--ink);stroke-width:1.3;stroke-linejoin:round}
+.plate .pl-std{fill:var(--surface);stroke:var(--ink);stroke-width:1.3;stroke-linejoin:round}
+.plate .pl-vein{fill:none;stroke:var(--setosa);stroke-width:.9;opacity:.7}
+.plate .pl-leaf{fill:var(--versicolor-tint);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.plate .pl-stem{fill:none;stroke:var(--ink);stroke-width:1.4}
+.plate .pl-dot{fill:var(--clay)}
+.plate .pl-lead{stroke:var(--clay);stroke-width:1;fill:none}
+.plate .pl-pin{fill:var(--clay)}
+.plate .pl-rule{stroke:var(--line);stroke-width:1}
 
-/* Buttons & Inputs */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  color: var(--text-main);
-  transition: all 0.2s;
-}
-.btn:hover { background: var(--border-color); }
-.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-.btn-primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-lg); }
+.tabs{counter-reset:tab;background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;gap:0;padding:0;margin:0 0 32px;border-bottom:1px solid var(--ink)}
+.tab{counter-increment:tab;border:0;border-radius:0;background:transparent;padding:16px 20px 14px;margin:0 0 -1px;gap:8px;border-bottom:3px solid transparent;font-weight:500;box-shadow:none}
+.tab .ti{display:none}
+.tab::before{content:counter(tab,decimal-leading-zero);font:italic 400 14px var(--serif);color:var(--clay)}
+.tab:hover{background:transparent;color:var(--ink)}
+.tab[aria-selected="true"]{background:transparent;border-color:transparent;border-bottom-color:var(--clay);box-shadow:none;color:var(--ink)}
 
-.preset-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.pill { padding: 6px 12px; border-radius: 99px; font-size: 12px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-card); }
-.pill:hover { border-color: var(--primary); color: var(--primary); }
+.card{border-radius:var(--rad);box-shadow:none;border:1px solid var(--line);background:var(--surface);padding:28px}
+.card h2{font:400 28px/1.15 var(--serif);letter-spacing:-.02em}
+.card .sub{font-size:14.5px}
+.btn{border-radius:var(--rad);background:transparent;border:1px solid var(--ink);color:var(--ink);font-weight:600;letter-spacing:.01em;box-shadow:none}
+.btn:hover{background:var(--soft);border-color:var(--ink)}
+.btn.primary,.btn.primary:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent);box-shadow:none;filter:none}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.sm{border-color:var(--line)}
+.schips .btn[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);box-shadow:none}
+.bub.me{background:var(--accent);color:var(--on-accent)}
+.bub,.bub.me,.bub.bot{border-radius:var(--rad)}
+input,select,textarea,.num input,.every input{border-radius:var(--rad)!important}
+.seg{border-radius:var(--rad)}.seg button{border-radius:2px}
+.chip,.badge{border-radius:2px}
+.bar,.bar b,.prob .bar b{border-radius:0}
+.warn,.disc,.err,.dx,.plant{border-radius:var(--rad);box-shadow:none}
+.dx:hover,.plant:hover{box-shadow:none}
+.dx h3,.phead h3{font-weight:400}
+dialog.auth{border-radius:var(--rad);box-shadow:none;border-color:var(--ink)}
+dialog.auth::backdrop{background:rgba(20,26,22,.6);backdrop-filter:none}
+footer{border-top:1px solid var(--ink);padding-top:18px}
 
-/* Probabilities Bar */
-.probs-container { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-.prob-row { display: grid; grid-template-columns: 100px 1fr 50px; align-items: center; font-size: 13px; }
-.prob-bar-bg { height: 8px; background: rgba(0,0,0,0.06); border-radius: 99px; overflow: hidden; }
-.prob-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.stage{background:var(--c-tint);border-color:var(--line)}
+.stage svg{filter:none;max-width:420px}
+.card .species{font:italic 400 52px/1.05 var(--serif)}
+.fall{fill:var(--c);stroke:var(--ink);stroke-opacity:.5}
+.std{fill:var(--surface);stroke:var(--ink);stroke-opacity:.5}
+.patch{fill:#E2B24A}
+.hub{fill:var(--clay);opacity:1}
+.cap{color:var(--muted)}
 
-/* Diagnostic & Chat Elements */
-.chat-box { display: flex; flex-direction: column; height: 500px; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-.bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
-.bubble.me { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
-.bubble.bot { align-self: flex-start; background: var(--border-color); color: var(--text-main); border-bottom-left-radius: 2px; }
-.chat-input-area { display: flex; gap: 10px; margin-top: 12px; }
-.chat-input-area textarea { flex: 1; border-radius: 10px; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); resize: none; }
+.collage figure,.rphoto,.photo{border-radius:0;box-shadow:none;border:1px solid var(--ink)}
+.collage figcaption{background:var(--surface);color:var(--ink);text-shadow:none;left:0;bottom:0;padding:5px 12px;border-radius:0;font:italic 400 14px var(--serif)}
+.rphoto figcaption{border-radius:0;backdrop-filter:none;background:var(--surface);color:var(--ink);left:0;bottom:0}
+
+@media (max-width:820px){.hero{gap:28px;padding:28px 0 32px}.hero-art{order:-1}.hero-art svg{max-width:280px}.tab{padding:14px 14px 12px}}
+@media (max-width:520px){.logo small{display:none}.hero h1{font-size:40px}.card{padding:20px}.tab::before{display:none}}
 </style>
 </head>
 <body>
-
-<div class="app-container">
-  <!-- Sidebar Navigator -->
-  <aside class="sidebar">
-    <div>
-      <a href="#" class="brand-logo">
-        <svg viewBox="0 0 40 40"><path d="M20 2a18 18 0 100 36 18 18 0 000-36zm0 6a4 4 0 110 8 4 4 0 010-8zm-6 20a6 6 0 1112 0H14z"/></svg>
-        Iris AI Studio
-      </a>
-      <nav class="nav-tabs" role="tablist">
-        <button class="nav-tab" role="tab" id="t-predict" aria-selected="true" aria-controls="p-predict">
-          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-          Nhận diện loài
-        </button>
-        <button class="nav-tab" role="tab" id="t-dx" aria-selected="false" aria-controls="p-dx">
-          <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          Chẩn đoán bệnh
-        </button>
-        <button class="nav-tab" role="tab" id="t-chat" aria-selected="false" aria-controls="p-chat">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          Hỏi Chuyên gia AI
-        </button>
-        <button class="nav-tab" role="tab" id="t-garden" aria-selected="false" aria-controls="p-garden">
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          Quản lý vườn cây
-        </button>
-        <button class="nav-tab" role="tab" id="t-batch" aria-selected="false" aria-controls="p-batch">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-          Xử lý hàng loạt
-        </button>
-      </nav>
-    </div>
-    <div style="font-size: 12px; color: #64748b;">
-      v2.0.0 — Powered by Scikit-Learn
-    </div>
-  </aside>
-
-  <!-- Main View -->
-  <main class="main-wrapper">
-    <header class="header-bar">
-      <div class="header-title">
-        <h2>Phân Tích & Chẩn Đoán Sinh Học</h2>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#" aria-label="Iris, về đầu trang">
+      <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true" class="mark"><g transform="translate(20 21)" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(60)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(180)"/><path d="M0 0C9 -4 12 -12 0 -17C-12 -12 -9 -4 0 0Z" transform="rotate(300)"/><path d="M0 0C3 -3 3 -9 0 -13C-3 -9 -3 -3 0 0Z"/></g></svg>
+      <span>Iris<small>tiệm cây &amp; bác sĩ cây cảnh</small></span>
+    </a>
+    <div class="top-right"><div class="acct" id="acct"></div>
+    <details class="adv">
+      <summary>Nâng cao</summary>
+      <div class="picker">
+        <label for="model">Mô hình nhận diện</label>
+        <select id="model" disabled><option>Đang tải...</option></select>
       </div>
-      <div class="header-controls">
-        <select id="model" class="btn" style="padding: 8px 12px;">
-          <option>Đang tải mô hình...</option>
-        </select>
-        <div id="acct"></div>
+    </details></div>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero-text">
+      <p class="eyebrow">Dành cho người trồng hoa diên vĩ</p>
+      <h1 id="hero-h">Hiểu cây của bạn,<br><em>chăm đúng cách.</em></h1>
+      <p class="lead">Nhận diện loài, chẩn đoán bệnh qua triệu chứng, hỏi chuyên gia và theo dõi lịch chăm sóc cho từng cây trong vườn.</p>
+      <div class="cta">
+        <button class="btn primary lg" type="button" data-go="t-predict">Nhận diện loài</button>
+        <button class="btn lg" type="button" data-go="t-dx">Chẩn đoán bệnh</button>
+        <button class="btn lg" type="button" data-go="t-chat">Hỏi chuyên gia</button>
       </div>
-    </header>
+      <ul class="stats" aria-label="Điểm nổi bật">
+        <li><b>3</b><span>loài nhận diện</span></li>
+        <li><b>11</b><span>vấn đề thường gặp</span></li>
+        <li><b>0đ</b><span>dùng miễn phí</span></li>
+      </ul>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 380 450" class="plate">
+        <rect class="pl-frame" x="1" y="1" width="378" height="448"/>
+        <rect class="pl-inner" x="12" y="12" width="356" height="426"/>
+        <text class="pl-tx caps" x="26" y="38">Tranh I</text>
+        <text class="pl-tx caps" x="354" y="38" text-anchor="end">Iridaceae</text>
+        <g transform="translate(190 210)">
+          <path class="pl-leaf" d="M0 190C-14 140 -50 100 -92 66C-70 112 -40 152 0 190Z" transform="translate(0 -2)"/>
+          <path class="pl-leaf" d="M0 190C14 140 52 104 96 76C72 118 42 154 0 190Z" transform="translate(0 -2)"/>
+          <path class="pl-stem" d="M0 100V188"/>
+          <path class="pl-fall" d="M0 0C58 -22 62 -84 0 -108C-62 -84 -58 -22 0 0Z" transform="rotate(60)"/>
+          <path class="pl-fall" d="M0 0C58 -22 62 -84 0 -108C-62 -84 -58 -22 0 0Z" transform="rotate(180)"/>
+          <path class="pl-fall" d="M0 0C58 -22 62 -84 0 -108C-62 -84 -58 -22 0 0Z" transform="rotate(300)"/>
+          <path class="pl-vein" d="M0 -8V-92" transform="rotate(60)"/><path class="pl-vein" d="M0 -8V-92" transform="rotate(180)"/><path class="pl-vein" d="M0 -8V-92" transform="rotate(300)"/>
+          <path class="pl-std" d="M0 0C20 -14 24 -52 0 -74C-24 -52 -20 -14 0 0Z"/>
+          <path class="pl-std" d="M0 0C20 -14 24 -52 0 -74C-24 -52 -20 -14 0 0Z" transform="rotate(120)"/>
+          <path class="pl-std" d="M0 0C20 -14 24 -52 0 -74C-24 -52 -20 -14 0 0Z" transform="rotate(240)"/>
+          <circle class="pl-dot" r="4"/>
+        </g>
+        <path class="pl-lead" d="M190 68V136"/><circle class="pl-pin" cx="190" cy="136" r="2.5"/>
+        <text class="pl-tx" x="190" y="60" text-anchor="middle">b · cánh hoa (petal)</text>
+        <path class="pl-lead" d="M302 128L282 158"/><circle class="pl-pin" cx="282" cy="158" r="2.5"/>
+        <text class="pl-tx" x="354" y="120" text-anchor="end">a · đài hoa (sepal)</text>
+        <path class="pl-rule" d="M26 404H354"/>
+        <text class="pl-tx cap" x="26" y="424">Hình 1. Cấu tạo bông diên vĩ</text>
+      </svg>
+    </div>
+  </section>
 
-    <div class="content-body">
-      <div id="error" class="err" hidden role="alert" style="margin-bottom: 20px;"></div>
+  <div id="error" class="err" hidden role="alert"></div>
 
-      <!-- Tab 1: Predict -->
-      <section id="p-predict" role="tabpanel">
-        <div class="grid-layout">
-          <div class="card stage">
-            <svg id="flower" viewBox="0 0 400 400"></svg>
-            <h1 class="species-title" id="species">Iris...</h1>
-            <div class="confidence-tag" id="conf">Đang tính toán...</div>
-            <div class="probs-container" id="probs"></div>
+  <div class="tabs" role="tablist" aria-label="Chức năng">
+    <button class="tab" role="tab" id="t-predict" aria-controls="p-predict" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2-3 2-6 0-9-2 3-2 6 0 9ZM12 12c3 0 6 1 8 3-3 1-6 1-8-3ZM12 12c-3 0-6 1-8 3 3 1 6 1 8-3ZM12 12v9"/></svg><span>Nhận diện loài</span></button>
+    <button class="tab" role="tab" id="t-dx" aria-controls="p-dx" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg><span>Chẩn đoán bệnh</span></button>
+    <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Hỏi chuyên gia</span></button>
+    <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7ZM12 14c0-4 3-6 8-6 0 4-3 6-8 6Z"/></svg><span>Vườn của tôi</span></button>
+    <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"/></svg><span>Nhận diện lô hoa</span></button>
+  </div>
+
+  <!-- DỰ ĐOÁN -->
+  <section id="p-predict" role="tabpanel" aria-labelledby="t-predict">
+    <div class="grid" id="predict-root">
+      <div class="card stage">
+        <svg id="flower" viewBox="0 0 400 400" role="img" aria-label="Hình hoa vẽ theo số đo"></svg>
+        <p class="cap">Đài hoa (rủ xuống) và cánh hoa (dựng đứng) được vẽ theo số đo bạn nhập.</p>
+        <div class="result" aria-live="polite">
+          <h2 class="species" id="species"><small>Iris</small>...</h2>
+          <p class="conf" id="conf">Đang khởi động mô hình...</p>
+          <div class="probs" id="probs"></div>
+          <p class="agree" id="agree"></p>
+          <div class="chips" id="chips"></div>
+          <figure class="rphoto" id="rphoto" hidden><img id="rphoto-img" alt="" loading="lazy"><figcaption id="rphoto-cap"></figcaption></figure>
+          <p class="warn" id="warn" hidden></p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h2>Số đo</h2>
+          <p class="sub">Kéo thanh trượt hoặc gõ số trực tiếp. Đơn vị là centimet.</p>
+          <div class="presets" role="group" aria-label="Điền mẫu">
+            <button class="btn" data-preset="setosa">Mẫu setosa</button>
+            <button class="btn" data-preset="versicolor">Mẫu versicolor</button>
+            <button class="btn" data-preset="virginica">Mẫu virginica</button>
+            <button class="btn" id="random">Mẫu thật ngẫu nhiên</button>
           </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Tham Số Số Đo Hoa (cm)</h3>
-              <p class="card-subtitle">Điều chỉnh thanh trượt để nhận diện thời gian thực</p>
-            </div>
-            
-            <div class="preset-pills">
-              <button class="pill" data-preset="setosa">Mẫu Setosa</button>
-              <button class="pill" data-preset="versicolor">Mẫu Versicolor</button>
-              <button class="pill" data-preset="virginica">Mẫu Virginica</button>
-              <button class="pill" id="random">Ngẫu nhiên</button>
-            </div>
-
-            <div id="sliders" class="slider-group"></div>
-
-            <div style="display: flex; gap: 12px; align-items: center;">
-              <button class="btn btn-primary" id="save">Lưu Kết Quả</button>
-              <span id="toast" style="font-size: 13px; color: var(--text-muted);"></span>
-            </div>
+          <div id="sliders"></div>
+          <div class="actions">
+            <button class="btn primary" id="save">Lưu vào lịch sử</button>
+            <span class="toast" id="toast" role="status"></span>
           </div>
         </div>
-      </section>
 
-      <!-- Tab 2: Diagnosis -->
-      <section id="p-dx" role="tabpanel" hidden>
-        <div class="grid-layout">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Chọn Triệu Chứng Cây Bệnh</h3>
-            </div>
-            <div id="sym-groups"></div>
-            <div style="margin-top: 16px;">
-              <button class="btn btn-primary" id="dx-run" disabled>Chẩn đoán ngay</button>
-              <button class="btn" id="dx-clear">Xóa chọn</button>
-            </div>
+        <div class="card">
+          <div class="head-row">
+            <div><h2>Lịch sử</h2><p class="sub">Bấm vào một dòng để nạp lại số đo.</p></div>
+            <button class="btn sm" id="clear" hidden>Xóa lịch sử</button>
           </div>
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Kết Quả Đánh Giá & Hướng Xử Lý</h3>
-            </div>
-            <div id="dx-out"></div>
-          </div>
+          <ul class="hist" id="hist"></ul>
+          <p class="empty" id="hist-empty">Chưa có mẫu nào. Điều chỉnh số đo rồi chọn Lưu vào lịch sử để so sánh các lần nhận diện.</p>
         </div>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <!-- Tab 3: AI Chat -->
-      <section id="p-chat" role="tabpanel" hidden>
-        <div class="card chat-box">
-          <div class="card-header">
-            <h3 class="card-title">Trợ Lý AI Chăm Sóc Cây</h3>
-          </div>
-          <div class="chat-messages" id="msgs"></div>
-          <form class="chat-input-area" id="chat-form">
-            <textarea id="chat-in" rows="1" placeholder="Hỏi AI về cách chăm sóc, bệnh hại..."></textarea>
-            <button class="btn btn-primary" type="submit">Gửi</button>
+  <!-- VƯỜN -->
+  <section id="p-garden" role="tabpanel" aria-labelledby="t-garden" hidden>
+    <div class="grid">
+      <div class="stack">
+        <div class="card">
+          <h2>Thêm cây vào vườn</h2>
+          <p class="sub">Web sẽ lập lịch tưới nước, bón phân và kiểm tra sâu bệnh cho từng cây.</p>
+          <form id="g-form" class="gform">
+            <label>Tên cây <input id="g-name" maxlength="40" placeholder="Ví dụ: Chậu ban công"></label>
+            <label>Loài
+              <select id="g-sp">
+                <option value="setosa">Iris setosa</option><option value="versicolor">Iris versicolor</option>
+                <option value="virginica">Iris virginica</option><option value="unknown">Chưa biết</option>
+              </select>
+            </label>
+            <label>Nơi trồng
+              <select id="g-place"><option value="pot">Trong chậu</option><option value="ground">Ngoài đất</option></select>
+            </label>
+            <label>Ngày trồng <input id="g-date" type="date"></label>
+            <div class="actions">
+              <button class="btn primary" type="submit">Thêm vào vườn</button>
+              <button class="btn" type="button" id="g-fromid">Dùng loài vừa nhận diện</button>
+              <span class="toast" id="g-toast" role="status"></span>
+            </div>
           </form>
         </div>
-      </section>
-
-      <!-- Tab 4: Garden -->
-      <section id="p-garden" role="tabpanel" hidden>
-        <div class="grid-layout">
-          <div class="card">
-            <h3 class="card-title">Thêm Cây Mới</h3>
-            <form id="g-form" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
-              <input id="g-name" class="btn" placeholder="Tên gợi nhớ (Ví dụ: Iris chậu công viên)" style="text-align: left;">
-              <select id="g-sp" class="btn" style="text-align: left;">
-                <option value="setosa">Iris setosa</option>
-                <option value="versicolor">Iris versicolor</option>
-                <option value="virginica">Iris virginica</option>
-              </select>
-              <button class="btn btn-primary" type="submit">Thêm Vào Danh Sách</button>
-            </form>
-          </div>
-          <div class="card">
-            <h3 class="card-title">Danh Sách Cây Trong Vườn</h3>
-            <div id="g-list" style="margin-top: 12px;"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Tab 5: Batch -->
-      <section id="p-batch" role="tabpanel" hidden>
         <div class="card">
-          <h3 class="card-title">Nhập Dữ Liệu Lô (CSV)</h3>
-          <textarea id="csv" style="width: 100%; height: 120px; margin-top: 12px; border-radius: 8px; padding: 10px;" placeholder="sepal_length,sepal_width,petal_length,petal_width"></textarea>
-          <div style="margin-top: 12px; display: flex; gap: 10px;">
-            <button class="btn btn-primary" id="run">Chạy Dự Đoán Lô</button>
+          <h2>Việc cần làm hôm nay</h2>
+          <p class="toast" id="g-undo" role="status"></p>
+          <div id="g-today"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Vườn của tôi</h2>
+        <p class="sub">Số ngày giữa các lần chăm sóc là gợi ý mặc định, bạn có thể chỉnh theo thời tiết và đất của mình.</p>
+        <div id="g-list"></div>
+        <p class="disc" id="g-sync"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HÀNG LOẠT -->
+  <section id="p-batch" role="tabpanel" aria-labelledby="t-batch" hidden>
+    <div class="card">
+      <h2>Nhận diện cả lô hoa cùng lúc</h2>
+      <p class="sub">Phù hợp cho cửa hàng hoặc vườn ươm: dán bảng số đo của nhiều bông hoa (CSV) hoặc chọn tệp, web sẽ nhận diện loài cho từng bông. Nếu tệp có cột nhãn loài, web đối chiếu và tính tỉ lệ khớp.</p>
+      <label for="csv" class="sub" style="display:block;margin-bottom:6px">Dữ liệu (mỗi dòng một mẫu: dài đài, rộng đài, dài cánh, rộng cánh)</label>
+      <textarea id="csv" spellcheck="false" placeholder="sepal_length,sepal_width,petal_length,petal_width&#10;5.1,3.5,1.4,0.2&#10;6.7,3.0,5.2,2.3"></textarea>
+      <div class="tools">
+        <button class="btn primary" id="run">Nhận diện cả lô</button>
+        <label class="btn" for="file" style="cursor:pointer">Chọn tệp CSV</label>
+        <input type="file" id="file" accept=".csv,.txt,text/csv" hidden>
+        <button class="btn" id="sample">Điền dữ liệu mẫu</button>
+        <span class="toast" id="btoast" role="status"></span>
+      </div>
+    </div>
+    <div class="card" id="bresult" hidden style="margin-top:20px">
+      <div class="head-row"><h2>Kết quả</h2><button class="btn" id="download">Tải kết quả CSV</button></div>
+      <div class="sum" id="bsum"></div>
+      <div class="twrap"><table id="btable"></table></div>
+      <p class="note" id="bnote"></p>
+    </div>
+  </section>
+
+  <!-- CHẨN ĐOÁN -->
+  <section id="p-dx" role="tabpanel" aria-labelledby="t-dx" hidden>
+    <div class="grid">
+      <div class="stack">
+        <div class="card">
+          <h2>Cây của bạn bị sao?</h2>
+          <p class="sub">Chọn tất cả triệu chứng bạn thấy, càng đủ thì gợi ý càng sát.</p>
+          <div id="sym-groups"><p class="empty">Đang tải...</p></div>
+          <div class="actions">
+            <button class="btn primary" id="dx-run" disabled>Chẩn đoán</button>
+            <button class="btn" id="dx-clear">Bỏ chọn hết</button>
+            <span class="toast" id="dx-toast" role="status"></span>
           </div>
         </div>
-      </section>
+        <div class="card care" id="care-card"></div>
+      </div>
+      <div class="card">
+        <h2>Kết quả chẩn đoán</h2>
+        <div id="dx-out"><p class="empty">Chọn triệu chứng rồi bấm Chẩn đoán.</p></div>
+        <p class="disc">Kết quả chỉ mang tính tham khảo, không thay thế người có chuyên môn. Cây bệnh nặng hoặc lan nhanh, hãy liên hệ cán bộ bảo vệ thực vật hoặc cửa hàng cây cảnh uy tín. Thuốc bảo vệ thực vật cần dùng đúng theo nhãn.</p>
+      </div>
     </div>
-  </main>
+  </section>
+
+  <!-- CHAT -->
+  <section id="p-chat" role="tabpanel" aria-labelledby="t-chat" hidden>
+    <div class="card chat">
+      <h2>Hỏi chuyên gia chăm sóc diên vĩ</h2>
+      <p class="sub">Hỏi về tưới nước, ánh sáng, bón phân, sâu bệnh. Chuyên gia sẽ tham khảo loài và triệu chứng bạn đã chọn.</p>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="sugg" id="sugg"></div>
+      <form class="compose" id="chat-form">
+        <textarea id="chat-in" rows="1" maxlength="1500" placeholder="Nhập câu hỏi, ví dụ: lá diên vĩ bị vàng phải làm sao?" aria-label="Câu hỏi"></textarea>
+        <button class="btn primary" id="chat-send" type="submit">Gửi</button>
+      </form>
+      <p class="mode" id="chat-mode"></p>
+    </div>
+  </section>
+
+  <footer>Nhận diện loài dùng mô hình học trên bộ dữ liệu Iris của Fisher (150 mẫu, 3 loài), chỉ đáng tin khi số đo nằm trong phạm vi dữ liệu này. Chẩn đoán bệnh và lời khuyên chỉ mang tính tham khảo.<span class="credits" id="photo-credits" hidden></span></footer>
 </div>
 
-<!-- Giữ nguyên Script kết nối API backend cũ -->
+<dialog id="auth" class="auth" aria-labelledby="auth-title">
+  <form id="auth-form" novalidate>
+    <div class="auth-head"><h2 id="auth-title">Đăng nhập</h2><button type="button" class="btn sm" id="auth-close" aria-label="Đóng">Đóng</button></div>
+    <div class="seg" role="group" aria-label="Chọn thao tác">
+      <button type="button" data-mode="login" aria-pressed="true">Đăng nhập</button>
+      <button type="button" data-mode="register" aria-pressed="false">Đăng ký</button>
+    </div>
+    <label id="auth-name-row" hidden>Tên hiển thị <input id="auth-name" maxlength="40" autocomplete="name" placeholder="Ví dụ: Lan"></label>
+    <label>Email <input id="auth-email" type="email" required maxlength="254" autocomplete="email" placeholder="ban@example.com"></label>
+    <label>Mật khẩu <input id="auth-pw" type="password" required maxlength="128" autocomplete="current-password" placeholder="Ít nhất 8 ký tự"></label>
+    <p class="err" id="auth-err" hidden role="alert"></p>
+    <button class="btn primary lg" id="auth-submit" type="submit">Đăng nhập</button>
+    <p class="note" id="auth-note">Đăng nhập để lưu vườn của bạn trên mọi thiết bị. Mật khẩu được mã hóa trước khi lưu.</p>
+  </form>
+</dialog>
+
 <script>
-/* Tích hợp toàn bộ script xử lý logic cũ để đảm bảo giữ nguyên toàn bộ tính năng */
 (() => {
-  const $ = s => document.querySelector(s);
-  const SP = ['setosa','versicolor','virginica'];
-  const FEATS = [
-    {k:'sepal_length', label:'Dài đài hoa', min:4.0, max:8.5},
-    {k:'sepal_width',  label:'Rộng đài hoa', min:1.8, max:4.8},
-    {k:'petal_length', label:'Dài cánh hoa', min:0.8, max:7.2},
-    {k:'petal_width',  label:'Rộng cánh hoa', min:0.1, max:2.8}
-  ];
+'use strict';
+const $ = s => document.querySelector(s);
+const SP = ['setosa','versicolor','virginica'];
+const FEATS = [
+  {k:'sepal_length', label:'Dài đài hoa', hint:'sepal', min:4.0, max:8.5, short:'Dài đài hoa'},
+  {k:'sepal_width',  label:'Rộng đài hoa', hint:'sepal', min:1.8, max:4.8, short:'Rộng đài hoa'},
+  {k:'petal_length', label:'Dài cánh hoa', hint:'petal', min:0.8, max:7.2, short:'Dài cánh hoa'},
+  {k:'petal_width',  label:'Rộng cánh hoa', hint:'petal', min:0.1, max:2.8, short:'Rộng cánh hoa'},
+];
+const nf1 = new Intl.NumberFormat('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pct = v => nf1.format(v*100) + '%';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-  const state = { info: null, model: 'svm_linear', values: {sepal_length:5.1, sepal_width:3.5, petal_length:1.4, petal_width:0.2}, result: null };
-
-  async function api(path, body, method) {
-    const res = await fetch(path, body ? {method: method||'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : undefined);
-    return res.json();
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs||{})){
+    if (k==='class') e.className = v; else if (k==='text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k,v);
   }
+  for (const c of kids.flat()) if (c!=null) e.append(c);
+  return e;
+}
 
-  // Chuyển Tab Navigator
-  const tabs = document.querySelectorAll('.nav-tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.setAttribute('aria-selected', 'false');
-        $(`#${t.getAttribute('aria-controls')}`).hidden = true;
-      });
-      tab.setAttribute('aria-selected', 'true');
-      $(`#${tab.getAttribute('aria-controls')}`).hidden = false;
-    });
+const state = {
+  info:null, model:'svm_linear',
+  values:{sepal_length:5.1,sepal_width:3.5,petal_length:1.4,petal_width:0.2},
+  result:null, regions:{}, seq:0, history:[], batch:null
+};
+
+/* ---------- lưu trữ cục bộ ---------- */
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem('iris-history')||'[]'); }catch(e){ return []; } },
+  set(v){ try{ localStorage.setItem('iris-history', JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- gọi API ---------- */
+async function api(path, body, method){
+  const res = await fetch(path, body ? {method:method||'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : undefined);
+  if (!res.ok){
+    let msg = 'Lỗi ' + res.status;
+    try{ const j = await res.json(); if (typeof j.detail==='string') msg = j.detail; }catch(e){}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+function showError(msg, retry){
+  const box = $('#error'); box.textContent = msg + ' ';
+  if (retry) box.append(h('button',{class:'btn sm',onclick:retry,text:'Thử lại'}));
+  box.hidden = false;
+}
+const clearError = () => { $('#error').hidden = true; };
+
+/* ---------- tabs ---------- */
+const tabs = [...document.querySelectorAll('.tab')];
+function selectTab(t){
+  tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
+  if (t.id==='t-dx') renderCare();
+  if (t.id==='t-garden') renderGarden();
+}
+tabs.forEach((t,i) => {
+  t.addEventListener('click', () => selectTab(t));
+  t.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key==='ArrowLeft'){
+      const n = tabs[(i + (e.key==='ArrowRight'?1:-1) + tabs.length) % tabs.length]; n.focus(); selectTab(n);
+    }
   });
+});
 
-  // Render Sliders
-  function buildSliders() {
-    const box = $('#sliders');
-    box.innerHTML = '';
-    FEATS.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'row-control';
-      div.innerHTML = `
-        <div class="row-label">${f.label} <span>cm</span></div>
-        <div class="input-wrap">
-          <input type="range" id="r-${f.k}" min="${f.min}" max="${f.max}" step="0.1" value="${state.values[f.k]}">
-          <input type="number" id="n-${f.k}" value="${state.values[f.k]}">
-        </div>
-      `;
-      box.appendChild(div);
+/* ---------- bông hoa ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const K = 21;
+const flower = {falls:[], stds:[], disp:null, target:null, raf:0};
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.append(e); return e; }
+function initFlower(){
+  const svg = $('#flower'); svg.textContent = '';
+  const root = el('g',{transform:'translate(200 200)'}, svg);
+  [60,180,300].forEach(a => { const g = el('g',{transform:`rotate(${a})`}, root);
+    flower.falls.push({p:el('path',{class:'fall'},g), s:el('ellipse',{class:'patch'},g)}); });
+  [0,120,240].forEach(a => { const g = el('g',{transform:`rotate(${a})`}, root);
+    flower.stds.push(el('path',{class:'std'},g)); });
+  el('circle',{class:'hub',r:5}, root);
+  flower.disp = vecOf(state.values); flower.target = {...flower.disp};
+}
+const vecOf = v => ({sl:v.sepal_length, sw:v.sepal_width, pl:v.petal_length, pw:v.petal_width});
+function petal(len, wid){
+  const w = wid/1.5;
+  return `M0 0C${w} ${-len*.2} ${w} ${-len*.8} 0 ${-len}C${-w} ${-len*.8} ${-w} ${-len*.2} 0 0Z`;
+}
+function drawFlower(){
+  const d = flower.disp;
+  const fl = d.sl*K, fw = d.sw*K*0.95;
+  const sl = d.pl*K, sw = Math.max(d.pw*K*1.5, 5);
+  flower.falls.forEach(f => {
+    f.p.setAttribute('d', petal(fl, fw));
+    f.s.setAttribute('cy', -fl*.36); f.s.setAttribute('rx', Math.max(fw*.07,2)); f.s.setAttribute('ry', fl*.12);
+  });
+  flower.stds.forEach(p => p.setAttribute('d', petal(sl, sw)));
+}
+function tweenFlower(){
+  flower.target = vecOf(state.values);
+  cancelAnimationFrame(flower.raf);
+  if (reduce){ flower.disp = {...flower.target}; drawFlower(); return; }
+  const step = () => {
+    let done = true;
+    for (const k in flower.target){
+      const diff = flower.target[k] - flower.disp[k];
+      if (Math.abs(diff) > .004){ flower.disp[k] += diff*.25; done = false; } else flower.disp[k] = flower.target[k];
+    }
+    drawFlower();
+    if (!done) flower.raf = requestAnimationFrame(step);
+  };
+  flower.raf = requestAnimationFrame(step);
+}
 
-      const rng = div.querySelector(`#r-${f.k}`);
-      const num = div.querySelector(`#n-${f.k}`);
-      rng.addEventListener('input', (e) => {
-        num.value = e.target.value;
-        state.values[f.k] = parseFloat(e.target.value);
-        predict();
+/* ---------- thanh trượt ---------- */
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const round1 = v => Math.round(v*10)/10;
+function buildSliders(){
+  const box = $('#sliders'); box.textContent = '';
+  FEATS.forEach(f => {
+    const rng = h('input',{type:'range',id:'r-'+f.k,min:f.min,max:f.max,step:'0.1','aria-label':f.label});
+    const num = h('input',{type:'number',id:'n-'+f.k,min:f.min,max:f.max,step:'0.1','aria-label':f.label+' (cm)',inputmode:'decimal'});
+    const set = (v, from) => {
+      v = round1(clamp(v, f.min, f.max));
+      state.values[f.k] = v;
+      rng.value = v; if (from!=='num') num.value = v;
+      rng.style.setProperty('--pct', ((v-f.min)/(f.max-f.min)*100)+'%');
+      changed();
+    };
+    rng.addEventListener('input', () => set(parseFloat(rng.value),'rng'));
+    num.addEventListener('input', () => { const v = parseFloat(num.value.replace(',','.')); if (!isNaN(v)) set(v,'num'); });
+    num.addEventListener('blur', () => { num.value = state.values[f.k]; });
+    f.set = set;
+    box.append(h('div',{class:'row'},
+      h('div',{class:'row-top'},
+        h('label',{for:'r-'+f.k}, f.label, h('span',{text:'('+f.hint+')'})),
+        h('div',{class:'num'}, num, h('span',{text:'cm'}))),
+      rng));
+    f.set(state.values[f.k]);
+  });
+}
+function setValues(arr){
+  FEATS.forEach((f,i) => f.set(arr[i]));
+}
+
+/* ---------- dự đoán ---------- */
+let timer = 0;
+function changed(){
+  tweenFlower();
+  clearTimeout(timer);
+  timer = setTimeout(predict, 140);
+}
+async function predict(){
+  const my = ++state.seq;
+  try{
+    const r = await api('/predict', {...state.values, model:state.model});
+    if (my !== state.seq) return;
+    state.result = r; clearError();
+    renderResult();
+  }catch(e){
+    if (my !== state.seq) return;
+    showError('Không kết nối được máy chủ ('+e.message+'). Gói miễn phí của Render có thể cần khoảng một phút để khởi động lại.', predict);
+  }
+}
+function renderResult(){
+  const r = state.result; if (!r) return;
+  const root = $('#predict-root');
+  root.dataset.species = r.prediction;
+  $('#species').replaceChildren(h('small',{text:'Iris'}), r.prediction);
+  $('#conf').textContent = 'Độ chắc chắn ' + pct(r.confidence);
+  const probs = $('#probs'); probs.textContent = '';
+  SP.forEach(s => {
+    const v = r.probabilities[s];
+    const b = h('b',{style:`background:var(--${s});width:${v*100}%`});
+    probs.append(h('div',{class:'prob'}, h('i',{text:s}), h('div',{class:'bar'}, b), h('em',{text:pct(v)})));
+  });
+  const a = r.agreement;
+  $('#agree').textContent = a.agree===a.total
+    ? `${a.agree}/${a.total} mô hình cùng kết luận`
+    : `${a.agree}/${a.total} mô hình chọn ${r.prediction}. Các mô hình chưa thống nhất, hãy xem lại số đo.`;
+  const chips = $('#chips'); chips.textContent = '';
+  state.info.models.forEach(m => {
+    const v = a.models[m.id];
+    chips.append(h('span',{class:'chip',title:m.name+': '+v.prediction}, h('i',{class:'dot '+v.prediction}), m.name.replace('SVM ','SVM ')));
+  });
+  const out = [];
+  FEATS.forEach(f => { const [lo,hi] = state.info.ranges[f.k]; const v = state.values[f.k];
+    if (v < lo-.0001 || v > hi+.0001) out.push(`${f.label.toLowerCase()} ${nf1.format(v)} cm (dữ liệu huấn luyện: ${nf1.format(lo)} đến ${nf1.format(hi)} cm)`); });
+  const w = $('#warn');
+  if (out.length){ w.textContent = 'Có số đo nằm ngoài phạm vi dữ liệu huấn luyện: ' + out.join('; ') + '. Kết quả kém tin cậy.'; w.hidden = false; } else w.hidden = true;
+  renderResultPhoto();
+}
+
+/* ---------- lịch sử ---------- */
+function renderHistory(){
+  const ul = $('#hist'); ul.textContent = '';
+  const fmt = new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  state.history.forEach(it => {
+    const li = h('li',{tabindex:'0',role:'button','aria-label':'Nạp lại mẫu '+it.sp},
+      h('i',{class:'dot '+it.sp}), h('span',{class:'sp',text:it.sp}),
+      h('span',{class:'vals',text:it.v.map(v => nf1.format(v)).join(' / ')}),
+      h('time',{text:fmt.format(new Date(it.t))}));
+    const load = () => setValues(it.v);
+    li.addEventListener('click', load);
+    li.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); load(); } });
+    ul.append(li);
+  });
+  $('#hist-empty').hidden = state.history.length>0;
+  $('#clear').hidden = state.history.length===0;
+}
+let toastT = 0;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => t.textContent = '', 2600); }
+$('#save').addEventListener('click', () => {
+  if (!state.result) return;
+  state.history.unshift({v:FEATS.map(f => state.values[f.k]), sp:state.result.prediction, p:state.result.pca, t:Date.now()});
+  state.history = state.history.slice(0,12);
+  store.set(state.history); renderHistory(); toast('Đã lưu vào lịch sử');
+});
+$('#clear').addEventListener('click', () => { state.history = []; store.set([]); renderHistory(); toast('Đã xóa lịch sử'); });
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => setValues(state.info.means[b.dataset.preset])));
+$('#random').addEventListener('click', () => {
+  const s = state.info.samples; setValues(s[Math.floor(Math.random()*s.length)].v);
+});
+
+function setModel(id){
+  state.model = id; $('#model').value = id; predict();
+  try{ localStorage.setItem('iris-model', id); }catch(e){}
+}
+$('#model').addEventListener('change', e => setModel(e.target.value));
+
+/* ---------- hàng loạt ---------- */
+const reSL=/sepal[\s_\-]*length/i, reSW=/sepal[\s_\-]*width/i, rePL=/petal[\s_\-]*length/i, rePW=/petal[\s_\-]*width/i, reSP=/species|class|label|loai|loài/i;
+function parseTable(text){
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return {rows:[],skipped:0};
+  const delim = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+  const comma = delim !== ',';
+  const cells = lines.map(l => l.split(delim).map(s => s.trim().replace(/^"|"$/g,'')));
+  const num = s => { const v = parseFloat(comma ? s.replace(',','.') : s); return v; };
+  let head = null, body = cells;
+  if (cells[0].some(c => c!=='' && isNaN(num(c)))){ head = cells[0]; body = cells.slice(1); }
+  let idx = [0,1,2,3], spIdx = -1;
+  if (head){
+    const f = [reSL,reSW,rePL,rePW].map(r => head.findIndex(c => r.test(c)));
+    if (f.every(i => i>=0)) idx = f;
+    else { const numeric = head.map((c,i) => i).filter(i => !/^id$/i.test(head[i]) && !reSP.test(head[i])); idx = numeric.slice(0,4); }
+    spIdx = head.findIndex(c => reSP.test(c));
+  } else if (cells[0].length > 4 && isNaN(num(cells[0][cells[0].length-1]))) spIdx = cells[0].length-1;
+  const rows = []; let skipped = 0;
+  body.forEach(r => {
+    const v = idx.map(i => num(r[i]??''));
+    if (v.length<4 || v.some(x => !isFinite(x) || x<=0 || x>20)){ skipped++; return; }
+    const label = spIdx>=0 ? String(r[spIdx]||'').toLowerCase().replace(/^iris[\s_\-]*/,'') : null;
+    rows.push({v, label});
+  });
+  return {rows, skipped};
+}
+$('#sample').addEventListener('click', () => {
+  $('#csv').value = 'sepal_length,sepal_width,petal_length,petal_width\n5.1,3.5,1.4,0.2\n4.9,3.0,1.4,0.2\n7.0,3.2,4.7,1.4\n6.4,3.2,4.5,1.5\n6.3,3.3,6.0,2.5\n5.8,2.7,5.1,1.9\n5.9,3.0,4.2,1.5';
+});
+$('#file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  $('#csv').value = await f.text(); $('#btoast').textContent = 'Đã nạp ' + f.name; e.target.value = '';
+});
+$('#run').addEventListener('click', async () => {
+  const bt = $('#btoast'); const {rows, skipped} = parseTable($('#csv').value);
+  if (!rows.length){ bt.textContent = 'Chưa có dòng hợp lệ. Cần bốn cột số dương: dài đài, rộng đài, dài cánh, rộng cánh.'; return; }
+  const use = rows.slice(0,2000);
+  bt.textContent = 'Đang dự đoán...'; $('#run').disabled = true;
+  try{
+    const r = await api('/predict/batch', {model:state.model, rows:use.map(x => ({sepal_length:x.v[0],sepal_width:x.v[1],petal_length:x.v[2],petal_width:x.v[3]}))});
+    state.batch = use.map((x,i) => ({...x, res:r.results[i]}));
+    renderBatch(skipped, rows.length-use.length); bt.textContent = '';
+  }catch(e){ bt.textContent = 'Không dự đoán được: ' + e.message; }
+  $('#run').disabled = false;
+});
+function renderBatch(skipped, cut){
+  const b = state.batch, withLabel = b.some(x => x.label);
+  const counts = SP.map(s => b.filter(x => x.res.prediction===s).length);
+  const sum = $('#bsum'); sum.textContent = '';
+  sum.append(h('div',{}, h('strong',{text:String(b.length)}), h('span',{text:'mẫu đã dự đoán'})));
+  SP.forEach((s,i) => sum.append(h('div',{}, h('strong',{text:String(counts[i])}), h('span',{text:s}))));
+  const meanConf = b.reduce((a,x) => a+x.res.confidence,0)/b.length;
+  sum.append(h('div',{}, h('strong',{text:pct(meanConf)}), h('span',{text:'độ chắc chắn trung bình'})));
+  if (withLabel){ const lab = b.filter(x => x.label); const ok = lab.filter(x => x.label===x.res.prediction).length;
+    sum.append(h('div',{}, h('strong',{text:pct(ok/lab.length)}), h('span',{text:`khớp nhãn gốc (${ok}/${lab.length})`}))); }
+  const t = $('#btable'); t.textContent = '';
+  const cols = ['#','Dài đài','Rộng đài','Dài cánh','Rộng cánh','Dự đoán','Chắc chắn'].concat(withLabel?['Nhãn gốc']:[]);
+  t.append(h('thead',{}, h('tr',{}, cols.map((c,i) => h('th',{class:(i>=5?'l':''),text:c})))));
+  const tb = h('tbody');
+  b.slice(0,200).forEach((x,i) => {
+    const tds = [h('td',{text:String(i+1)}), ...x.v.map(v => h('td',{text:nf1.format(v)})),
+      h('td',{class:'l'}, h('i',{class:'dot '+x.res.prediction,style:'display:inline-block;margin-right:6px'}), h('i',{text:x.res.prediction})),
+      h('td',{class:'l',text:pct(x.res.confidence)})];
+    if (withLabel){ const same = x.label===x.res.prediction;
+      tds.push(h('td',{class:'l '+(x.label?(same?'ok':'bad'):'')},x.label?(x.label+(same?' (khớp)':' (lệch)')):'')); }
+    tb.append(h('tr',{}, tds));
+  });
+  t.append(tb);
+  const notes = [];
+  if (b.length>200) notes.push('Bảng hiển thị 200 mẫu đầu, tệp tải về có đủ '+b.length+' mẫu.');
+  if (skipped) notes.push(skipped+' dòng bị bỏ qua vì thiếu số hoặc số không hợp lệ.');
+  if (cut>0) notes.push(cut+' dòng vượt giới hạn 2000 mẫu nên chưa được dự đoán.');
+  $('#bnote').textContent = notes.join(' ');
+  $('#bresult').hidden = false; $('#bresult').scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
+}
+$('#download').addEventListener('click', () => {
+  const head = ['sepal_length','sepal_width','petal_length','petal_width','prediction','confidence'];
+  const withLabel = state.batch.some(x => x.label); if (withLabel) head.push('label');
+  const lines = [head.join(',')].concat(state.batch.map(x => [...x.v, x.res.prediction, x.res.confidence].concat(withLabel?[x.label||'']:[]).join(',')));
+  const a = h('a',{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'iris-ket-qua.csv'});
+  document.body.append(a); a.click(); a.remove();
+});
+
+/* ---------- bác sĩ cây cảnh ---------- */
+const care = {kb:null, picked:new Set(), msgs:[]};
+const curSpecies = () => state.result ? state.result.prediction : null;
+
+async function loadCare(){
+  try{ care.kb = await api('/api/care-kb'); }catch(e){ $('#sym-groups').textContent = 'Không tải được danh sách triệu chứng.'; return; }
+  const box = $('#sym-groups'); box.textContent = '';
+  care.kb.groups.forEach(g => {
+    const row = h('div',{class:'schips',role:'group','aria-label':g.name});
+    g.items.forEach(it => {
+      const b = h('button',{class:'btn',type:'button','aria-pressed':'false',text:it.label});
+      b.addEventListener('click', () => {
+        const on = !care.picked.has(it.id); on ? care.picked.add(it.id) : care.picked.delete(it.id);
+        b.setAttribute('aria-pressed', on); $('#dx-run').disabled = care.picked.size===0;
       });
+      row.append(b);
     });
+    box.append(h('div',{class:'sgroup'}, h('h3',{text:g.name}), row));
+  });
+  renderCare(); renderChatMode();
+}
+function renderCare(){
+  const card = $('#care-card'); if (!care.kb) return;
+  const sp = curSpecies(), c = care.kb.species[sp];
+  card.textContent = '';
+  if (c){
+    if (photos[sp]) card.append(h('img',{class:'carephoto',src:photos[sp].src,alt:photos[sp].alt,loading:'lazy'}));
+    card.append(h('h3',{text:c.title}), h('p',{text:c.summary}), h('ul',{}, c.tips.map(t => h('li',{text:t}))));
+    card.append(h('p',{class:'note',text:'Loài theo kết quả ở tab Nhận diện loài.'}));
+  } else {
+    card.append(h('h3',{text:'Mẹo chăm sóc chung'}), h('ul',{}, care.kb.general.map(t => h('li',{text:t}))));
   }
+}
+function badge(text, cls){ return h('span',{class:'badge '+cls,text}); }
+function renderDx(res){
+  const out = $('#dx-out'); out.textContent = '';
+  if (!res.length){ out.append(h('p',{class:'empty',text:'Chưa tìm thấy bệnh phù hợp. Thử chọn thêm triệu chứng hoặc hỏi chuyên gia.'})); return; }
+  res.forEach((d,i) => {
+    const lk = d.likelihood==='Cao' ? 'hi' : d.likelihood==='Trung bình' ? 'mid' : 'lo';
+    const ask = h('button',{class:'btn sm',type:'button',text:'Hỏi chuyên gia về bệnh này'});
+    ask.addEventListener('click', () => { selectTab($('#t-chat')); sendChat('Cây của mình có thể bị "'+d.name+'". Mình nên xử lý thế nào và bao lâu thì thấy cây khỏe lại?'); });
+    out.append(h('div',{class:'dx'},
+      h('h3',{text:(i+1)+'. '+d.name}),
+      h('div',{class:'badges'}, badge('Khả năng: '+d.likelihood.toLowerCase(), lk), badge('Mức nghiêm trọng: '+d.severity.toLowerCase(), d.severity==='Cao'?'hi':'')),
+      h('p',{text:d.cause}),
+      h('h4',{text:'Khớp với triệu chứng'}), h('p',{text:d.matched.join('; ')}),
+      h('h4',{text:'Cách xử lý'}), h('ul',{}, d.treat.map(t => h('li',{text:t}))),
+      h('h4',{text:'Phòng ngừa'}), h('ul',{}, d.prevent.map(t => h('li',{text:t}))),
+      h('div',{}, ask)));
+  });
+}
+$('#dx-run').addEventListener('click', async () => {
+  const btn = $('#dx-run'), t = $('#dx-toast'); btn.disabled = true; t.textContent = 'Đang phân tích...';
+  try{ const r = await api('/api/diagnose', {symptoms:[...care.picked]}); renderDx(r.results); t.textContent = ''; }
+  catch(e){ t.textContent = 'Không chẩn đoán được: '+e.message; }
+  btn.disabled = care.picked.size===0;
+});
+$('#dx-clear').addEventListener('click', () => {
+  care.picked.clear(); document.querySelectorAll('#sym-groups .btn').forEach(b => b.setAttribute('aria-pressed','false'));
+  $('#dx-run').disabled = true; $('#dx-out').replaceChildren(h('p',{class:'empty',text:'Chọn triệu chứng rồi bấm Chẩn đoán.'}));
+});
 
-  async function predict() {
-    const res = await api('/predict', {...state.values, model: state.model});
-    state.result = res;
-    $('#species').textContent = res.prediction;
-    $('#conf').textContent = `Độ tin cậy: ${(res.confidence * 100).toFixed(1)}%`;
-    document.body.dataset.species = res.prediction;
+/* chat */
+function richText(text){
+  const frag = document.createDocumentFragment(); let list = null;
+  const inline = (parent, s) => s.split(/(\*\*[^*]+\*\*)/).forEach(p => { if (/^\*\*[^*]+\*\*$/.test(p)) parent.append(h('b',{text:p.slice(2,-2)})); else if (p) parent.append(p); });
+  text.split(/\r?\n/).forEach(line => {
+    const m = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (m){ if (!list){ list = h('ul'); frag.append(list); } const li = h('li'); inline(li, m[1]); list.append(li); }
+    else if (line.trim()){ list = null; const p = h('p'); inline(p, line.trim()); frag.append(p); }
+  });
+  return frag;
+}
+function addBubble(role, text, cls){
+  const b = h('div',{class:'bub '+(role==='user'?'me':'bot')+(cls?' '+cls:'')});
+  b.append(role==='user' ? document.createTextNode(text) : richText(text));
+  const box = $('#msgs'); box.append(b); box.scrollTop = box.scrollHeight; return b;
+}
+function renderChatMode(){
+  const m = care.kb && care.kb.chat_mode==='ai';
+  $('#chat-mode').textContent = m ? 'Trả lời bởi trợ lý AI. Nội dung chỉ mang tính tham khảo.' : 'Đang dùng chế độ trả lời tự động từ cơ sở tri thức có sẵn.';
+}
+let chatBusy = false;
+async function sendChat(text){
+  text = (text||'').trim(); if (!text || chatBusy) return;
+  chatBusy = true; $('#chat-send').disabled = true; $('#sugg').hidden = true;
+  addBubble('user', text); care.msgs.push({role:'user', content:text});
+  const wait = addBubble('assistant', 'Đang soạn câu trả lời...', 'typing');
+  try{
+    const r = await api('/api/chat', {messages:care.msgs.slice(-10), species:curSpecies(), symptoms:[...care.picked]});
+    wait.remove(); addBubble('assistant', r.reply); care.msgs.push({role:'assistant', content:r.reply});
+    if (care.kb){ care.kb.chat_mode = r.mode; renderChatMode(); }
+  }catch(e){
+    wait.remove(); care.msgs.pop();
+    addBubble('assistant', e.message || 'Không kết nối được máy chủ, vui lòng thử lại.');
   }
+  chatBusy = false; $('#chat-send').disabled = false; $('#chat-in').focus();
+}
+$('#chat-form').addEventListener('submit', e => { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); });
+$('#chat-in').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); $('#chat-form').requestSubmit(); } });
+function initChat(){
+  addBubble('assistant', 'Xin chào! Mình là chuyên gia chăm sóc hoa diên vĩ. Bạn cần hỏi gì về cây của mình?');
+  const s = $('#sugg');
+  ['Lá diên vĩ bị vàng phải làm sao?','Bao lâu nên tưới nước một lần?','Vì sao cây không ra hoa?','Khi nào nên chia củ?'].forEach(q => {
+    const b = h('button',{class:'btn sm',type:'button',text:q}); b.addEventListener('click', () => sendChat(q)); s.append(b);
+  });
+}
 
-  async function init() {
+/* ---------- vườn của tôi ---------- */
+const GKEY = 'iris-garden';
+const garden = {plants: [], undo:null};
+const GSP = {setosa:'Iris setosa', versicolor:'Iris versicolor', virginica:'Iris virginica', unknown:'Chưa rõ loài'};
+const GTASKS = [
+  {id:'water', label:'Tưới nước', note:'Khi lớp đất mặt khô'},
+  {id:'feed',  label:'Bón phân',  note:'Phân ít đạm, nhiều lân và kali'},
+  {id:'check', label:'Kiểm tra sâu bệnh', note:'Xem lá, nụ và củ'},
+];
+const gstore = {
+  get(){ try{ const v = JSON.parse(localStorage.getItem(GKEY)||'[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } },
+  set(v){ try{ localStorage.setItem(GKEY, JSON.stringify(v)); }catch(e){} pushGarden(); }
+};
+const dstr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dparse = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, (m||1)-1, d||1); };
+const todayStr = () => dstr(new Date());
+const dayDiff = (a, b) => Math.round((dparse(a) - dparse(b)) / 86400000);
+const dfmt = new Intl.DateTimeFormat('vi-VN');
+function defaultEvery(sp, place){
+  const wet = sp==='versicolor' || sp==='virginica';
+  let water = wet ? 3 : 4; if (place==='pot') water = Math.max(2, water-1);
+  return {water, feed:60, check:7};
+}
+function taskInfo(p, t){
+  const due = dparse(p.last[t.id]); due.setDate(due.getDate() + p.every[t.id]);
+  const left = dayDiff(dstr(due), todayStr());
+  return {left, text: left<0 ? 'Quá hạn '+(-left)+' ngày' : left===0 ? 'Đến hạn hôm nay' : 'Còn '+left+' ngày (đến '+dfmt.format(due)+')', cls: left<0 ? 'late' : left===0 ? 'now' : ''};
+}
+function plantAge(p){
+  const d = dayDiff(todayStr(), p.planted);
+  if (d < 0) return 'Chưa đến ngày trồng';
+  if (d < 31) return 'Trồng được '+d+' ngày';
+  if (d < 365) return 'Trồng được '+Math.floor(d/30)+' tháng';
+  return 'Trồng được '+nf1.format(d/365)+' năm';
+}
+function markDone(p, id){
+  garden.undo = {pid:p.id, id, prev:p.last[id]};
+  p.last[id] = todayStr(); gstore.set(garden.plants); renderGarden();
+}
+function undoDone(){
+  const u = garden.undo; garden.undo = null; if (!u) return;
+  const p = garden.plants.find(x => x.id===u.pid); if (p){ p.last[u.id] = u.prev; gstore.set(garden.plants); }
+  renderGarden();
+}
+function renderGarden(){
+  const list = $('#g-list'); list.textContent = '';
+  if (!garden.plants.length) list.append(h('p',{class:'empty',text:'Vườn đang trống. Thêm cây đầu tiên ở bên trái.'}));
+  garden.plants.forEach(p => {
+    const del = h('button',{class:'btn sm',type:'button',text:'Xóa','aria-label':'Xóa '+p.name});
+    del.addEventListener('click', () => { if (confirm('Xóa "'+p.name+'" khỏi vườn?')){ garden.plants = garden.plants.filter(x => x.id!==p.id); gstore.set(garden.plants); renderGarden(); } });
+    const split = dparse(p.planted); split.setFullYear(split.getFullYear()+3);
+    const card = h('div',{class:'plant'}, h('div',{class:'phead'},
+      h('div',{}, h('h3',{text:p.name}), h('small',{text:GSP[p.sp]+' · '+(p.place==='pot'?'trong chậu':'ngoài đất')+' · '+plantAge(p)})), del));
+    GTASKS.forEach(t => {
+      const i = taskInfo(p, t);
+      const inp = h('input',{type:'number',min:1,max:365,value:p.every[t.id],'aria-label':'Số ngày giữa các lần '+t.label.toLowerCase()});
+      inp.addEventListener('change', () => { const v = Math.round(Number(inp.value)); if (v>=1 && v<=365){ p.every[t.id] = v; gstore.set(garden.plants); renderGarden(); } else inp.value = p.every[t.id]; });
+      const done = h('button',{class:'btn sm',type:'button',text:'Làm xong hôm nay'}); done.addEventListener('click', () => markDone(p, t.id));
+      const ld = h('input',{type:'date',value:p.last[t.id],max:todayStr(),min:p.planted,'aria-label':'Ngày '+t.label.toLowerCase()+' lần cuối'});
+      ld.addEventListener('change', () => { if (ld.value && ld.value<=todayStr()){ p.last[t.id] = ld.value; gstore.set(garden.plants); renderGarden(); } else ld.value = p.last[t.id]; });
+      card.append(h('div',{class:'gtask'},
+        h('div',{}, h('b',{text:t.label}), h('span',{class:'st '+i.cls,text:i.text}),
+          h('label',{class:'every lastdone'}, p.last[t.id]===p.planted ? 'Chưa làm lần nào, tính từ ngày trồng' : 'Làm lần cuối', ld)),
+        h('label',{class:'every'}, 'mỗi', inp, 'ngày'), done));
+    });
+    card.append(h('p',{class:'note',text:'Nên chia củ từ khoảng '+dfmt.format(split)+' (sau 3 năm trồng) để cây tiếp tục ra hoa.'}));
+    list.append(card);
+  });
+  const ub = $('#g-undo'); ub.textContent = '';
+  if (garden.undo){
+    const u = garden.undo, pl = garden.plants.find(x => x.id===u.pid), tk = GTASKS.find(x => x.id===u.id);
+    if (pl && tk){ const b = h('button',{class:'btn sm',type:'button',text:'Hoàn tác'}); b.addEventListener('click', undoDone);
+      ub.append('Đã ghi "'+tk.label+'" cho '+pl.name+'. Bấm nhầm? ', b); }
+  }
+  const today = $('#g-today'); today.textContent = '';
+  const due = [];
+  garden.plants.forEach(p => GTASKS.forEach(t => { const i = taskInfo(p, t); if (i.left<=0) due.push({p, t, i}); }));
+  due.sort((a,b) => a.i.left-b.i.left);
+  if (!due.length) today.append(h('p',{class:'empty',text: garden.plants.length ? 'Hôm nay không có việc nào đến hạn. Cây của bạn đang ổn.' : 'Thêm cây để nhận lịch chăm sóc.'}));
+  due.forEach(({p,t,i}) => {
+    const b = h('button',{class:'btn sm primary',type:'button',text:'Làm xong'}); b.addEventListener('click', () => markDone(p, t.id));
+    today.append(h('div',{class:'todo'}, h('span',{}, t.label+' · '+p.name, h('small',{text:i.text+'. '+t.note})), b));
+  });
+}
+$('#g-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const sp = $('#g-sp').value, place = $('#g-place').value, planted = $('#g-date').value || todayStr();
+  const name = $('#g-name').value.trim() || (GSP[sp]+' '+(garden.plants.length+1));
+  if (garden.plants.length >= 50){ $('#g-toast').textContent = 'Vườn đã đầy (tối đa 50 cây).'; return; }
+  garden.plants.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), name, sp, place, planted, every:defaultEvery(sp,place), last:{water:planted, feed:planted, check:planted}});
+  gstore.set(garden.plants); $('#g-name').value = ''; renderGarden();
+  const t = $('#g-toast'); t.textContent = 'Đã thêm "'+name+'"'; setTimeout(() => { t.textContent = ''; }, 2600);
+});
+$('#g-fromid').addEventListener('click', () => {
+  const sp = curSpecies(), t = $('#g-toast');
+  if (sp){ $('#g-sp').value = sp; t.textContent = 'Đã chọn '+GSP[sp]; } else t.textContent = 'Chưa có kết quả nhận diện.';
+  setTimeout(() => { t.textContent = ''; }, 2600);
+});
+function initGarden(){ $('#g-date').value = todayStr(); garden.plants = gstore.get().filter(p => p && p.id && p.every && p.last && p.planted); renderGarden(); }
+
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  selectTab($('#'+b.dataset.go));
+  $('.tabs').scrollIntoView({behavior:reduce?'auto':'smooth', block:'start'});
+}));
+
+/* ---------- ảnh hoa thật (static/photos/photos.json) ---------- */
+const photos = {};
+const photoUrl = f => '/static/photos/' + encodeURIComponent(f);
+async function loadPhotos(){
+  let man; try{ const r = await fetch('/static/photos/photos.json'); if (!r.ok) return; man = await r.json(); }catch(e){ return; }
+  await Promise.all(SP.map(sp => new Promise(done => {
+    const m = man && man[sp];
+    const okFile = m && typeof m.file==='string' && !/[\\/]|\.\./.test(m.file);
+    const okUrl = m && typeof m.url==='string' && /^https:\/\//.test(m.url);
+    if (!okFile && !okUrl) return done();
+    const src = okUrl ? m.url : photoUrl(m.file);
+    const im = new Image();
+    im.onload = () => { photos[sp] = {src, alt:String(m.alt||('Hoa Iris '+sp)), credit:String(m.credit||''), license:String(m.license||''), source:/^https:\/\//.test(m.source||'') ? m.source : ''}; done(); };
+    im.onerror = () => done();
+    im.src = src;
+  })));
+  const have = SP.filter(sp => photos[sp]);
+  if (!have.length) return;
+  buildCollage(have); renderCredits(have); renderResultPhoto(); renderCare();
+}
+function buildCollage(have){
+  const art = document.querySelector('.hero-art'); if (!art) return;
+  const wrap = h('div',{class:'collage n'+have.length});
+  have.forEach(sp => wrap.append(h('figure',{}, h('img',{src:photos[sp].src,alt:photos[sp].alt,loading:'eager'}), h('figcaption',{text:'Iris '+sp}))));
+  art.textContent = ''; art.append(wrap); art.classList.add('photo');
+}
+function renderCredits(have){
+  const box = $('#photo-credits'); box.textContent = '';
+  const items = have.filter(sp => photos[sp].credit);
+  if (!items.length) return;
+  box.append(' Ảnh: ');
+  items.forEach((sp,i) => {
+    const p = photos[sp], label = 'Iris '+sp+' – '+p.credit+(p.license ? ' ('+p.license+')' : '');
+    box.append(p.source ? h('a',{href:p.source,target:'_blank',rel:'noopener noreferrer',text:label}) : label);
+    if (i < items.length-1) box.append('; ');
+  });
+  box.hidden = false;
+}
+function renderResultPhoto(){
+  const fig = $('#rphoto'); if (!fig) return;
+  const stage = fig.closest('.stage') || document.querySelector('.stage');
+  const p = state.result && photos[state.result.prediction];
+  if (!p){ fig.hidden = true; stage.classList.remove('has-photo'); return; }
+  if (stage.firstElementChild !== fig) stage.insertBefore(fig, stage.firstChild);
+  stage.classList.add('has-photo');
+  const img = $('#rphoto-img'); img.src = p.src; img.alt = p.alt;
+  $('#rphoto-cap').textContent = 'Ảnh tham khảo: Iris '+state.result.prediction;
+  fig.hidden = false;
+}
+
+/* ---------- tài khoản ---------- */
+state.user = null;
+const gsync = {t:0};
+function pushGarden(){
+  if (!state.user) return;
+  clearTimeout(gsync.t);
+  gsync.t = setTimeout(async () => {
+    try{ await api('/api/garden', {plants:garden.plants}, 'PUT'); renderGardenSync(true); }
+    catch(e){ if (/đăng nhập/i.test(e.message)){ state.user = null; renderAcct(); } else renderGardenSync(false); }
+  }, 600);
+}
+function renderGardenSync(ok){
+  const box = $('#g-sync'); if (!box) return; box.textContent = '';
+  if (state.user){
+    box.append(ok===false ? 'Chưa đồng bộ được với tài khoản, bản lưu trên máy vẫn còn. Hãy thử lại sau.' : 'Vườn được đồng bộ với tài khoản '+state.user.email+', bạn xem được trên mọi thiết bị.');
+  } else {
+    const b = h('button',{class:'btn sm',type:'button',text:'Đăng nhập'}); b.addEventListener('click', () => openAuth('login'));
+    box.append('Vườn đang chỉ lưu trên trình duyệt này, xóa dữ liệu duyệt web sẽ mất. Đăng nhập để lưu trên mọi thiết bị.', b);
+  }
+}
+function renderAcct(){
+  const box = $('#acct'); box.textContent = '';
+  if (state.user){
+    const out = h('button',{class:'btn sm',type:'button',text:'Đăng xuất'});
+    out.addEventListener('click', logout);
+    box.append(h('span',{class:'me'}, h('span',{class:'av',text:(state.user.name||'?').trim().charAt(0).toUpperCase()}), h('span',{class:'nm',text:state.user.name})), out);
+  } else {
+    const b = h('button',{class:'btn sm',type:'button',text:'Đăng nhập'}); b.addEventListener('click', () => openAuth('login'));
+    const r = h('button',{class:'btn sm primary',type:'button',text:'Đăng ký'}); r.addEventListener('click', () => openAuth('register'));
+    box.append(b, r);
+  }
+  renderGardenSync();
+}
+async function syncGardenFromServer(){
+  try{
+    const server = (await api('/api/garden')).plants || [];
+    const local = gstore.get().filter(p => p && p.id && p.every && p.last && p.planted);
+    const have = new Set(server.map(p => p.id));
+    garden.plants = server.concat(local.filter(p => !have.has(p.id))).slice(0,50);
+    gstore.set(garden.plants); renderGarden(); renderGardenSync(true);
+  }catch(e){ renderGardenSync(false); }
+}
+async function refreshUser(){
+  try{ const r = await api('/api/auth/me'); state.user = r.user || null; }catch(e){ state.user = null; }
+  renderAcct(); if (state.user) syncGardenFromServer();
+}
+async function logout(){
+  try{ await api('/api/auth/logout', {}); }catch(e){}
+  state.user = null; clearTimeout(gsync.t);
+  garden.plants = []; gstore.set([]); renderGarden(); renderAcct();
+}
+const authUI = {mode:'login'};
+function setAuthMode(mode){
+  authUI.mode = mode; const reg = mode==='register';
+  $('#auth-title').textContent = reg ? 'Tạo tài khoản' : 'Đăng nhập';
+  $('#auth-submit').textContent = reg ? 'Đăng ký' : 'Đăng nhập';
+  $('#auth-name-row').hidden = !reg;
+  $('#auth-pw').autocomplete = reg ? 'new-password' : 'current-password';
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode===mode));
+  $('#auth-err').hidden = true;
+}
+function openAuth(mode){
+  setAuthMode(mode||'login'); $('#auth-form').reset();
+  const d = $('#auth'); if (!d.open) d.showModal(); $('#auth-email').focus();
+}
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
+$('#auth-close').addEventListener('click', () => $('#auth').close());
+$('#auth').addEventListener('click', e => { if (e.target===e.currentTarget) e.currentTarget.close(); });
+$('#auth-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#auth-err'), btn = $('#auth-submit'), email = $('#auth-email').value.trim(), pw = $('#auth-pw').value;
+  const fail = m => { err.textContent = m; err.hidden = false; };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return fail('Email không hợp lệ.');
+  if (authUI.mode==='register' && pw.length < 8) return fail('Mật khẩu cần ít nhất 8 ký tự.');
+  if (!pw) return fail('Vui lòng nhập mật khẩu.');
+  err.hidden = true; btn.disabled = true;
+  try{
+    const body = {email, password:pw}; if (authUI.mode==='register') body.name = $('#auth-name').value.trim();
+    const r = await api('/api/auth/'+authUI.mode, body);
+    state.user = r.user; $('#auth').close(); renderAcct(); await syncGardenFromServer();
+  }catch(ex){ fail(ex.message || 'Không kết nối được máy chủ.'); }
+  btn.disabled = false;
+});
+
+document.addEventListener('click', e => { const d = document.querySelector('.adv'); if (d && d.open && !d.contains(e.target)) d.open = false; });
+
+/* ---------- khởi động ---------- */
+async function boot(){
+  try{
     state.info = await api('/api/info');
-    const sel = $('#model');
-    sel.innerHTML = '';
-    state.info.models.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m.id; opt.textContent = m.name;
-      sel.appendChild(opt);
-    });
-    buildSliders();
-    predict();
+  }catch(e){
+    showError('Không kết nối được máy chủ ('+e.message+'). Gói miễn phí của Render có thể cần khoảng một phút để khởi động lại.', boot);
+    return;
   }
-
-  init();
+  clearError();
+  const sel = $('#model'); sel.textContent = '';
+  state.info.models.forEach(m => sel.append(h('option',{value:m.id,text:m.name})));
+  sel.disabled = false;
+  try{ const saved = localStorage.getItem('iris-model'); if (saved && state.info.models.some(m => m.id===saved)) state.model = saved; else state.model = state.info.default_model; }catch(e){ state.model = state.info.default_model; }
+  sel.value = state.model;
+  state.history = store.get().filter(x => x && Array.isArray(x.v) && x.v.length===4 && SP.includes(x.sp));
+  initFlower(); buildSliders(); renderHistory(); tweenFlower();
+  initChat(); loadCare(); initGarden(); loadPhotos(); refreshUser();
+  predict();
+}
+boot();
 })();
 </script>
 </body>
