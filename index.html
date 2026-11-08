@@ -1242,11 +1242,14 @@ async function loadPhotos(){
   let man; try{ const r = await fetch('/static/photos/photos.json'); if (!r.ok) return; man = await r.json(); }catch(e){ return; }
   await Promise.all(SP.map(sp => new Promise(done => {
     const m = man && man[sp];
-    if (!m || typeof m.file!=='string' || /[\\/]|\.\./.test(m.file)) return done();
+    const okFile = m && typeof m.file==='string' && !/[\\/]|\.\./.test(m.file);
+    const okUrl = m && typeof m.url==='string' && /^https:\/\//.test(m.url);
+    if (!okFile && !okUrl) return done();
+    const src = okUrl ? m.url : photoUrl(m.file);
     const im = new Image();
-    im.onload = () => { photos[sp] = {src:photoUrl(m.file), alt:String(m.alt||('Hoa Iris '+sp)), credit:String(m.credit||''), license:String(m.license||''), source:/^https:\/\//.test(m.source||'') ? m.source : ''}; done(); };
+    im.onload = () => { photos[sp] = {src, alt:String(m.alt||('Hoa Iris '+sp)), credit:String(m.credit||''), license:String(m.license||''), source:/^https:\/\//.test(m.source||'') ? m.source : ''}; done(); };
     im.onerror = () => done();
-    im.src = photoUrl(m.file);
+    im.src = src;
   })));
   const have = SP.filter(sp => photos[sp]);
   if (!have.length) return;

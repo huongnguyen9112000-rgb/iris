@@ -1,6 +1,7 @@
 {
   "setosa": {
     "file": "setosa.jpg",
+    "url": "",
     "alt": "Hoa Iris setosa",
     "credit": "",
     "license": "",
@@ -8,6 +9,7 @@
   },
   "versicolor": {
     "file": "versicolor.jpg",
+    "url": "",
     "alt": "Hoa Iris versicolor",
     "credit": "",
     "license": "",
@@ -15,6 +17,7 @@
   },
   "virginica": {
     "file": "virginica.jpg",
+    "url": "",
     "alt": "Hoa Iris virginica",
     "credit": "",
     "license": "",

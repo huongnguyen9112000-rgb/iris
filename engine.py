@@ -18,7 +18,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-VERSION = 2
+VERSION = 3
 ARTIFACT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "artifacts.joblib")
 SPECIES = ["setosa", "versicolor", "virginica"]
 FEATURES = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
@@ -26,27 +26,27 @@ DEFAULT_MODEL = "svm_linear"
 
 MODEL_SPECS = {
     "svm_linear": (
-        "SVM tuyến tính",
+        "Linear SVM",
         "Mô hình trong bài giảng: vẽ ranh giới thẳng giữa các loài.",
         lambda: make_pipeline(StandardScaler(), SVC(kernel="linear", probability=True, random_state=42)),
     ),
     "svm_rbf": (
-        "SVM phi tuyến",
+        "RBF SVM",
         "Cùng họ SVM nhưng ranh giới cong, hợp với dữ liệu chồng lấn.",
         lambda: make_pipeline(StandardScaler(), SVC(kernel="rbf", probability=True, random_state=42)),
     ),
     "logistic": (
-        "Hồi quy logistic",
+        "Logistic Regression",
         "Đơn giản và nhanh, cho xác suất tự nhiên.",
         lambda: make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)),
     ),
     "knn": (
-        "K láng giềng gần nhất",
+        "K-Nearest Neighbors",
         "Nhìn 5 mẫu giống nhất và để chúng bỏ phiếu.",
         lambda: make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5)),
     ),
     "forest": (
-        "Rừng ngẫu nhiên",
+        "Random Forest",
         "Nhiều cây quyết định bỏ phiếu, cho biết số đo nào quan trọng.",
         lambda: RandomForestClassifier(n_estimators=200, random_state=42),
     ),
