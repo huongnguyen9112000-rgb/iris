@@ -93,6 +93,7 @@ def build():
         info.append({
             "id": mid, "name": name, "desc": desc,
             "group": "svm" if mid.startswith("svm_") else "other",
+            "n_support": [int(v) for v in model.steps[-1][1].n_support_] if mid.startswith("svm_") else None,
             "cv_mean": round(float(scores.mean()), 4),
             "cv_std": round(float(scores.std()), 4),
             "confusion": confusion_matrix(y, pred).tolist(),

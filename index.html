@@ -513,6 +513,25 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
 .cgroup{display:flex;flex-direction:column;align-items:center;gap:6px}
 .cgroup .cap{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .cgroup .row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+
+/* so sánh kernel */
+.ktable th,.ktable td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.ktable th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+.ktable td{font-size:14px;line-height:1.45}
+.ktable{width:100%}
+.ktable td:nth-child(5){min-width:200px;white-space:normal}
+.ktable .kbar{min-width:90px}
+#kcur .prob{grid-template-columns:90px 1fr auto}
+#kcur .prob em{white-space:nowrap;font-style:normal}
+.ktable .kf{font-family:var(--mono,ui-monospace,monospace);font-size:13px;white-space:nowrap}
+.ktable tr.best td:first-child{box-shadow:inset 3px 0 0 var(--accent,#C0623B)}
+.kbar{height:8px;background:var(--bar-bg,#e5e5e5);border-radius:99px;overflow:hidden;margin-bottom:6px;min-width:120px}
+.kbar i{display:block;height:100%;background:var(--accent,#C0623B)}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:8px}
+.kcell{margin:0}
+.kcell canvas{display:block;width:100%;border:1px solid var(--line);border-radius:var(--rad,8px)}
+.kcell figcaption{margin-top:8px;font-size:14px;font-weight:600}
+.klegend{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -563,6 +582,7 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
     <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Hỏi chuyên gia</span></button>
     <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7ZM12 14c0-4 3-6 8-6 0 4-3 6-8 6Z"/></svg><span>Vườn của tôi</span></button>
     <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"/></svg><span>Nhận diện lô hoa</span></button>
+    <button class="tab" role="tab" id="t-kernel" aria-controls="p-kernel" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18c4 0 4-12 9-12s5 12 9 12"/></svg><span>So sánh kernel</span></button>
   </div>
 
   <!-- DỰ ĐOÁN -->
@@ -672,6 +692,27 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
       <div class="sum" id="bsum"></div>
       <div class="twrap"><table id="btable"></table></div>
       <p class="note" id="bnote"></p>
+    </div>
+  </section>
+
+  <!-- SO SÁNH KERNEL -->
+  <section id="p-kernel" role="tabpanel" aria-labelledby="t-kernel" hidden>
+    <div class="card">
+      <h2>So sánh các kernel SVM</h2>
+      <p class="sub">Kernel quyết định hình dạng ranh giới giữa các loài. Cả năm kernel dùng cùng dữ liệu và cùng bước chuẩn hóa, chỉ khác hàm nhân.</p>
+      <div class="twrap"><table class="ktable" id="ktable"></table></div>
+      <p class="note" id="knote"></p>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2>Ranh giới quyết định</h2>
+      <p class="sub">Mỗi ô là một kernel, vẽ trên mặt phẳng PCA (giữ được phần lớn thông tin của bốn số đo). Màu nền là loài mà kernel dự đoán, chấm nhỏ là 150 mẫu thật, vòng tròn là số đo bạn đang nhập ở mục Nhận diện loài.</p>
+      <div class="kgrid" id="kgrid"></div>
+      <div class="klegend" id="klegend"></div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2>Với số đo đang nhập</h2>
+      <p class="sub" id="kcur-sub">Mỗi kernel dự đoán gì cho số đo hiện tại.</p>
+      <div id="kcur"></div>
     </div>
   </section>
 
@@ -790,12 +831,73 @@ function showError(msg, retry){
 }
 const clearError = () => { $('#error').hidden = true; };
 
+
+/* ---------- so sánh kernel ---------- */
+const KERNEL_INFO = {
+  svm_linear:    {f:'x·x′',                 note:'Ranh giới thẳng. Ít tham số nhất, dễ diễn giải.'},
+  svm_rbf:       {f:'exp(−γ‖x−x′‖²)',       note:'Ranh giới cong mềm, γ = 0,25. Lựa chọn phổ biến khi chưa biết dữ liệu có tách thẳng được không.'},
+  svm_poly:      {f:'(γ·x·x′ + r)³',         note:'Đa thức bậc 3. Ranh giới uốn nhiều, dễ quá khớp khi dữ liệu ít.'},
+  svm_sigmoid:   {f:'tanh(γ·x·x′ + r)',      note:'Giống một nơ-ron mạng thần kinh. Không phải lúc nào cũng hợp lệ về mặt toán học nên thường kém ổn định.'},
+  svm_laplacian: {f:'exp(−γ‖x−x′‖₁)',        note:'Giống RBF nhưng đo khoảng cách L1, ít nhạy với giá trị lệch.'}
+};
+function drawRegion(cv, reg, color, pt){
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 320, Hh = Math.round(W*2/3);
+  cv.width = W*dpr; cv.height = Hh*dpr; cv.style.height = Hh+'px';
+  const g = cv.getContext('2d'); g.scale(dpr,dpr);
+  const [x0,x1,y0,y1] = reg.bounds, sx = v => (v-x0)/(x1-x0)*W, sy = v => Hh-(v-y0)/(y1-y0)*Hh;
+  const cw = W/reg.nx, ch = Hh/reg.ny;
+  for (let j=0;j<reg.ny;j++) for (let i=0;i<reg.nx;i++){
+    g.globalAlpha = .28; g.fillStyle = color[+reg.cells[j*reg.nx+i]];
+    g.fillRect(i*cw, Hh-(j+1)*ch, cw+.6, ch+.6);
+  }
+  g.globalAlpha = 1;
+  state.info.samples.forEach(sm => { g.fillStyle = color[sm.s]; g.beginPath(); g.arc(sx(sm.p[0]),sy(sm.p[1]),2.6,0,6.3); g.fill(); });
+  if (pt){ g.lineWidth = 2.5; g.strokeStyle = getComputedStyle(document.body).color; g.beginPath(); g.arc(sx(pt[0]),sy(pt[1]),8,0,6.3); g.stroke(); }
+}
+async function renderKernel(){
+  if (!state.info) return;
+  const ks = state.info.models.filter(m => grp(m)==='svm');
+  const cs = getComputedStyle(document.documentElement);
+  const color = ['--setosa','--versicolor','--virginica'].map(v => cs.getPropertyValue(v).trim());
+  const best = ks.reduce((a,b) => b.cv_mean > a.cv_mean ? b : a), worst = ks.reduce((a,b) => b.cv_mean < a.cv_mean ? b : a);
+  const tb = $('#ktable'); tb.textContent = '';
+  tb.append(h('thead',{}, h('tr',{}, ...['Kernel','Công thức K(x, x′)','Độ chính xác (kiểm tra chéo)','Vector hỗ trợ','Nhận xét'].map(t => h('th',{text:t})))));
+  const body = h('tbody'); 
+  ks.forEach(m => {
+    const info = KERNEL_INFO[m.id] || {f:'',note:''}, nsv = m.n_support ? m.n_support.reduce((a,b)=>a+b,0) : null;
+    body.append(h('tr',{class:m.id===best.id?'best':''},
+      h('td',{}, h('b',{text:m.name.replace(' SVM','')})),
+      h('td',{class:'kf',text:info.f}),
+      h('td',{}, h('div',{class:'kbar'}, h('i',{style:'width:'+(m.cv_mean*100)+'%'})), h('span',{text:pct(m.cv_mean)+' (±'+nf1.format(m.cv_std*100)+')'})),
+      h('td',{text: nsv==null ? '' : nsv+' / '+state.info.samples.length}),
+      h('td',{text:info.note})));
+  });
+  tb.append(body);
+  $('#knote').textContent = `Kernel cao nhất: ${best.name.replace(' SVM','')} (${pct(best.cv_mean)}), thấp nhất: ${worst.name.replace(' SVM','')} (${pct(worst.cv_mean)}). Độ lệch giữa các phần kiểm tra là ±${nf1.format(Math.min(...ks.map(m=>m.cv_std))*100)} đến ±${nf1.format(Math.max(...ks.map(m=>m.cv_std))*100)} điểm phần trăm, nên chênh lệch nhỏ giữa các kernel không có nhiều ý nghĩa. Vector hỗ trợ càng ít thì mô hình càng gọn.`;
+  const pt = state.result && state.result.pca;
+  const grid = $('#kgrid');
+  if (!grid.children.length){
+    ks.forEach(m => grid.append(h('figure',{class:'kcell'}, h('canvas',{id:'kc-'+m.id,'aria-label':'Ranh giới quyết định của '+m.name}), h('figcaption',{text:m.name}))));
+    $('#klegend').append(...['setosa','versicolor','virginica'].map((s,i) => h('span',{class:'chip'}, h('i',{class:'dot '+s}), s)));
+  }
+  await Promise.all(ks.map(async m => {
+    if (!state.regions[m.id]){ try{ state.regions[m.id] = await api('/api/regions?model='+m.id); }catch(e){ return; } }
+    const cv = $('#kc-'+m.id); if (cv) drawRegion(cv, state.regions[m.id], color, pt);
+  }));
+  const cur = $('#kcur'); cur.textContent = '';
+  if (!state.result){ cur.append(h('p',{class:'empty',text:'Chưa có số đo. Hãy mở mục Nhận diện loài và chọn số đo trước.'})); return; }
+  const votes = state.result.agreement.models;
+  ks.forEach(m => { const v = votes[m.id]; if (!v) return;
+    cur.append(h('div',{class:'prob'}, h('i',{text:m.name.replace(' SVM','')}), h('div',{class:'bar'}, h('b',{style:`background:var(--${v.prediction});width:${v.confidence*100}%`})), h('em',{text:v.prediction+' · '+pct(v.confidence)}))); });
+}
+
 /* ---------- tabs ---------- */
 const tabs = [...document.querySelectorAll('.tab')];
 function selectTab(t){
   tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
   if (t.id==='t-dx') renderCare();
   if (t.id==='t-garden') renderGarden();
+  if (t.id==='t-kernel') renderKernel();
 }
 tabs.forEach((t,i) => {
   t.addEventListener('click', () => selectTab(t));
