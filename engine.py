@@ -92,6 +92,7 @@ def build():
             importance = [round(float(v), 4) for v in model.feature_importances_]
         info.append({
             "id": mid, "name": name, "desc": desc,
+            "group": "svm" if mid.startswith("svm_") else "other",
             "cv_mean": round(float(scores.mean()), 4),
             "cv_std": round(float(scores.std()), 4),
             "confusion": confusion_matrix(y, pred).tolist(),

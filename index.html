@@ -507,6 +507,12 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
 /* ảnh hero: không khung, không chú thích */
 .hero-photo{padding:0;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 60px -28px rgba(0,0,0,.65)}
 .hero-photo figcaption{display:none}
+
+/* nhóm mô hình: SVM theo kernel và thuật toán khác */
+.chips{flex-direction:column;align-items:center;gap:14px}
+.cgroup{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cgroup .cap{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cgroup .row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
 </style>
 </head>
 <body>
@@ -753,6 +759,8 @@ function h(tag, attrs, ...kids){
   return e;
 }
 
+const grp = m => m.group || (m.id.indexOf('svm_')===0 ? 'svm' : 'other');
+const MODEL_GROUPS = [{id:'svm', title:'SVM theo kernel'}, {id:'other', title:'Thuật toán khác (không dùng kernel)'}];
 const state = {
   info:null, model:'svm_linear',
   values:{sepal_length:5.1,sepal_width:3.5,petal_length:1.4,petal_width:0.2},
@@ -911,9 +919,16 @@ function renderResult(){
     ? `${a.agree}/${a.total} mô hình cùng kết luận`
     : `${a.agree}/${a.total} mô hình chọn ${r.prediction}. Các mô hình chưa thống nhất, hãy xem lại số đo.`;
   const chips = $('#chips'); chips.textContent = '';
-  state.info.models.forEach(m => {
-    const v = a.models[m.id];
-    chips.append(h('span',{class:'chip',title:m.name+': '+v.prediction}, h('i',{class:'dot '+v.prediction}), m.name.replace('SVM ','SVM ')));
+  MODEL_GROUPS.forEach(g => {
+    const ms = state.info.models.filter(m => grp(m) === g.id);
+    if (!ms.length) return;
+    const ok = ms.filter(m => a.models[m.id].prediction === r.prediction).length;
+    const row = h('div',{class:'row'});
+    ms.forEach(m => {
+      const v = a.models[m.id];
+      row.append(h('span',{class:'chip',title:m.name+': '+v.prediction}, h('i',{class:'dot '+v.prediction}), m.name));
+    });
+    chips.append(h('div',{class:'cgroup'}, h('p',{class:'cap',text:g.title+' · '+ok+'/'+ms.length+' đồng ý'}), row));
   });
   const out = [];
   FEATS.forEach(f => { const [lo,hi] = state.info.ranges[f.k]; const v = state.values[f.k];
@@ -1400,7 +1415,10 @@ async function boot(){
   }
   clearError();
   const sel = $('#model'); sel.textContent = '';
-  state.info.models.forEach(m => sel.append(h('option',{value:m.id,text:m.name})));
+  MODEL_GROUPS.forEach(g => {
+    const ms = state.info.models.filter(m => grp(m) === g.id);
+    if (ms.length) sel.append(h('optgroup',{label:g.title}, ...ms.map(m => h('option',{value:m.id,text:m.name}))));
+  });
   sel.disabled = false;
   try{ const saved = localStorage.getItem('iris-model'); if (saved && state.info.models.some(m => m.id===saved)) state.model = saved; else state.model = state.info.default_model; }catch(e){ state.model = state.info.default_model; }
   sel.value = state.model;
