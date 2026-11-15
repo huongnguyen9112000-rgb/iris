@@ -12,17 +12,24 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics.pairwise import chi2_kernel, laplacian_kernel
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-VERSION = 3
+VERSION = 4
 ARTIFACT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "artifacts.joblib")
 SPECIES = ["setosa", "versicolor", "virginica"]
 FEATURES = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
 DEFAULT_MODEL = "svm_linear"
+
+
+def laplacian(A, B):
+    """Nhân Laplace: exp(-gamma * khoảng cách L1). Hàm ở mức module để lưu được bằng joblib."""
+    return laplacian_kernel(A, B, gamma=0.25)
+
 
 MODEL_SPECS = {
     "svm_linear": (
@@ -34,6 +41,21 @@ MODEL_SPECS = {
         "RBF SVM",
         "Cùng họ SVM nhưng ranh giới cong, hợp với dữ liệu chồng lấn.",
         lambda: make_pipeline(StandardScaler(), SVC(kernel="rbf", probability=True, random_state=42)),
+    ),
+    "svm_poly": (
+        "Polynomial SVM",
+        "SVM nhân đa thức bậc 3: ranh giới cong theo hàm bậc ba.",
+        lambda: make_pipeline(StandardScaler(), SVC(kernel="poly", degree=3, probability=True, random_state=42)),
+    ),
+    "svm_sigmoid": (
+        "Sigmoid SVM",
+        "SVM nhân sigmoid (tanh), giống một nơ-ron mạng thần kinh.",
+        lambda: make_pipeline(StandardScaler(), SVC(kernel="sigmoid", probability=True, random_state=42)),
+    ),
+    "svm_laplacian": (
+        "Laplacian SVM",
+        "SVM nhân Laplace: giống RBF nhưng đo khoảng cách theo L1, ít nhạy với giá trị lệch.",
+        lambda: make_pipeline(StandardScaler(), SVC(kernel=laplacian, probability=True, random_state=42)),
     ),
     "logistic": (
         "Logistic Regression",
