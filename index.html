@@ -582,7 +582,6 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
     <button class="tab" role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Hỏi chuyên gia</span></button>
     <button class="tab" role="tab" id="t-garden" aria-controls="p-garden" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7ZM12 14c0-4 3-6 8-6 0 4-3 6-8 6Z"/></svg><span>Vườn của tôi</span></button>
     <button class="tab" role="tab" id="t-batch" aria-controls="p-batch" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4ZM4 12l8 4 8-4M4 17l8 4 8-4"/></svg><span>Nhận diện lô hoa</span></button>
-    <button class="tab" role="tab" id="t-kernel" aria-controls="p-kernel" aria-selected="false" tabindex="-1"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18c4 0 4-12 9-12s5 12 9 12"/></svg><span>So sánh kernel</span></button>
   </div>
 
   <!-- DỰ ĐOÁN -->
@@ -629,6 +628,26 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
         </div>
       </div>
     </div>
+  <!-- SO SÁNH KERNEL -->
+  <div id="kernel-block" style="margin-top:20px">
+    <div class="card">
+      <h2>So sánh các kernel SVM</h2>
+      <p class="sub">Kernel quyết định hình dạng ranh giới giữa các loài. Cả năm kernel dùng cùng dữ liệu và cùng bước chuẩn hóa, chỉ khác hàm nhân.</p>
+      <div class="twrap"><table class="ktable" id="ktable"></table></div>
+      <p class="note" id="knote"></p>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2>Ranh giới quyết định</h2>
+      <p class="sub">Mỗi ô là một kernel, vẽ trên mặt phẳng PCA (giữ được phần lớn thông tin của bốn số đo). Màu nền là loài mà kernel dự đoán, chấm nhỏ là 150 mẫu thật, vòng tròn là số đo bạn đang nhập.</p>
+      <div class="kgrid" id="kgrid"></div>
+      <div class="klegend" id="klegend"></div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2>Với số đo đang nhập</h2>
+      <p class="sub" id="kcur-sub">Mỗi kernel dự đoán gì cho số đo hiện tại.</p>
+      <div id="kcur"></div>
+    </div>
+  </div>
   </section>
 
   <!-- VƯỜN -->
@@ -695,28 +714,7 @@ dialog.auth::backdrop{background:rgba(14,22,17,.45);backdrop-filter:blur(10px);-
     </div>
   </section>
 
-  <!-- SO SÁNH KERNEL -->
-  <section id="p-kernel" role="tabpanel" aria-labelledby="t-kernel" hidden>
-    <div class="card">
-      <h2>So sánh các kernel SVM</h2>
-      <p class="sub">Kernel quyết định hình dạng ranh giới giữa các loài. Cả năm kernel dùng cùng dữ liệu và cùng bước chuẩn hóa, chỉ khác hàm nhân.</p>
-      <div class="twrap"><table class="ktable" id="ktable"></table></div>
-      <p class="note" id="knote"></p>
-    </div>
-    <div class="card" style="margin-top:20px">
-      <h2>Ranh giới quyết định</h2>
-      <p class="sub">Mỗi ô là một kernel, vẽ trên mặt phẳng PCA (giữ được phần lớn thông tin của bốn số đo). Màu nền là loài mà kernel dự đoán, chấm nhỏ là 150 mẫu thật, vòng tròn là số đo bạn đang nhập ở mục Nhận diện loài.</p>
-      <div class="kgrid" id="kgrid"></div>
-      <div class="klegend" id="klegend"></div>
-    </div>
-    <div class="card" style="margin-top:20px">
-      <h2>Với số đo đang nhập</h2>
-      <p class="sub" id="kcur-sub">Mỗi kernel dự đoán gì cho số đo hiện tại.</p>
-      <div id="kcur"></div>
-    </div>
-  </section>
-
-  <!-- CHẨN ĐOÁN -->
+<!-- CHẨN ĐOÁN -->
   <section id="p-dx" role="tabpanel" aria-labelledby="t-dx" hidden>
     <div class="grid">
       <div class="stack">
@@ -841,7 +839,7 @@ const KERNEL_INFO = {
   svm_laplacian: {f:'exp(−γ‖x−x′‖₁)',        note:'Giống RBF nhưng đo khoảng cách L1, ít nhạy với giá trị lệch.'}
 };
 function drawRegion(cv, reg, color, pt){
-  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 320, Hh = Math.round(W*2/3);
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 320, Hh = Math.round(W*(reg.bounds[3]-reg.bounds[2])/(reg.bounds[1]-reg.bounds[0]));
   cv.width = W*dpr; cv.height = Hh*dpr; cv.style.height = Hh+'px';
   const g = cv.getContext('2d'); g.scale(dpr,dpr);
   const [x0,x1,y0,y1] = reg.bounds, sx = v => (v-x0)/(x1-x0)*W, sy = v => Hh-(v-y0)/(y1-y0)*Hh;
@@ -897,7 +895,6 @@ function selectTab(t){
   tabs.forEach(b => { const on = b===t; b.setAttribute('aria-selected',on); b.tabIndex = on?0:-1; $('#'+b.getAttribute('aria-controls')).hidden = !on; });
   if (t.id==='t-dx') renderCare();
   if (t.id==='t-garden') renderGarden();
-  if (t.id==='t-kernel') renderKernel();
 }
 tabs.forEach((t,i) => {
   t.addEventListener('click', () => selectTab(t));
@@ -998,7 +995,7 @@ async function predict(){
     const r = await api('/predict', {...state.values, model:state.model});
     if (my !== state.seq) return;
     state.result = r; clearError();
-    renderResult();
+    renderResult(); renderKernel();
   }catch(e){
     if (my !== state.seq) return;
     showError('Không kết nối được máy chủ ('+e.message+'). Gói miễn phí của Render có thể cần khoảng một phút để khởi động lại.', predict);
