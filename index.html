@@ -606,6 +606,31 @@ body.paged #t-home::before{content:none}
   body.paged .stage{padding-top:8px;padding-bottom:8px}
 }
 @media (min-width:821px) and (max-height:780px){body.paged .row{padding:2px 0}body.paged .stage .chips{margin:4px 0}}
+
+/* ===== kiểu website: menu trên đầu ===== */
+body.paged header.top{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;max-width:1160px;padding:6px 20px}
+body.paged header.top .tabs{flex:1;justify-content:center;overflow-x:auto;scrollbar-width:none;margin:0;min-width:0}
+body.paged .tab{border-top:0;border-bottom:3px solid transparent;padding:14px 10px 11px;white-space:nowrap}
+body.paged .tab[aria-selected="true"]{border-top-color:transparent;border-bottom-color:var(--clay)}
+body.paged .book{border-top:1px solid var(--ink)}
+.pg.turn-f,.pg.turn-b,.leaf.turn-f,.leaf.turn-b{animation:fadeIn .28s ease both;transform-origin:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.subnav{display:inline-flex;gap:4px;padding:4px;margin:0 0 14px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--bg) 70%,transparent)}
+.subbtn{border:0;background:none;color:var(--muted);font:500 14px var(--sans);padding:7px 16px;border-radius:999px;cursor:pointer}
+.subbtn[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.subbtn:disabled{opacity:.4;cursor:default}
+.subbtn:not(:disabled):not([aria-selected="true"]):hover{color:var(--ink)}
+@media (max-width:820px){
+  body.paged header.top{flex-wrap:wrap;gap:4px 12px}
+  body.paged header.top .tabs{order:3;flex:1 0 100%;justify-content:flex-start}
+}
+@media (min-width:821px) and (max-height:780px){.subnav{margin-bottom:8px}.subbtn{padding:5px 14px}}
+body.paged header.top .tab::before{display:none}
+body.paged header.top .tab{padding:16px 9px 13px;font-size:14.5px}
+body.paged header.top .tabs{justify-content:flex-start;gap:2px}
+body.paged header.top .logo{flex:none}
+body.paged header.top .top-right{flex:none}
+@media (max-width:820px){body.paged header.top .tab{padding:10px 10px 8px}}
 </style>
 </head>
 <body>
@@ -919,11 +944,8 @@ function selectTab(t){
 }
 const leafOk = (L,k) => !!L[k] && ![...L[k].children].every(c => c.hidden);
 function updateNav(){
-  const pv = $('#pg-prev'), nx = $('#pg-next'), cnt = $('#pg-count'); if (!pv) return;
   const pg = $('#'+tabs[curIdx].getAttribute('aria-controls')), L = pg._leaves, li = pg._li||0;
-  const n = L ? L.filter((_,k) => leafOk(L,k)).length : 0;
-  pv.disabled = curIdx<=0 && li<=0; nx.disabled = curIdx>=tabs.length-1 && (!L || !leafOk(L,li+1));
-  if (cnt) cnt.textContent = n>1 ? (li+1)+' / '+n : '';
+  if (pg._sub) [...pg._sub.children].forEach((b,k) => { b.setAttribute('aria-selected', k===li); b.disabled = !leafOk(L,k); });
 }
 function showLeaf(pg, i, d){
   const L = pg._leaves; if (!L) return;
@@ -1414,28 +1436,29 @@ function initGarden(){ $('#g-date').value = todayStr(); garden.plants = gstore.g
   const pages = tabs.map(t => $('#'+t.getAttribute('aria-controls')));
   wrap.append(book);
   pages.forEach(p => { p.classList.add('pg'); book.append(p); });
-  const mk = (pg, groups) => { pg._leaves = groups.map(nodes => { const l = h('div',{class:'leaf'}); nodes.forEach(n => l.append(n)); pg.append(l); return l; }); pg._li = 0; pg._leaves.forEach((l,k) => { l.hidden = k>0; }); };
+  const mk = (pg, groups, names) => { pg._names = names; pg._leaves = groups.map(nodes => { const l = h('div',{class:'leaf'}); nodes.forEach(n => l.append(n)); pg.append(l); return l; }); pg._li = 0; pg._leaves.forEach((l,k) => { l.hidden = k>0; }); };
   { const pr = $('#predict-root'), hist = $('#hist').closest('.card'), kb = $('#kernel-block');
     const l2 = h('div',{class:'grid2'}); l2.append(hist, kb);
     const foot = $('footer'); if (foot) l2.append(foot);
-    mk($('#p-predict'), [[pr],[l2]]);
+    mk($('#p-predict'), [[pr],[l2]], ['Số đo & kết quả','Lịch sử & so sánh kernel']);
     const dx = $('#p-dx'), sym = $('#sym-groups').closest('.card'), care = $('#care-card'), res = $('#dx-out').closest('.card');
     const g2 = h('div',{class:'grid'}); g2.append(res, care);
-    mk(dx, [[sym],[g2]]);
+    mk(dx, [[sym],[g2]], ['Chọn triệu chứng','Kết quả & chăm sóc']);
     $('#dx-run').addEventListener('click', () => setTimeout(() => showLeaf(dx,1,1), 350));
     const gd = $('#p-garden'), gl = gd.querySelector('.grid > .card:last-child'), gs = gd.querySelector('.grid > .stack');
     const g1 = h('div',{class:'grid'}); g1.append(...gs.querySelectorAll(':scope>.card'));
-    mk(gd, [[g1],[gl]]);
+    mk(gd, [[g1],[gl]], ['Thêm cây','Vườn của tôi']);
     const bp = $('#p-batch'), bres = $('#bresult'), bform = bp.querySelector('.card');
-    mk(bp, [[bform],[bres]]);
+    mk(bp, [[bform],[bres]], ['Nhập dữ liệu','Kết quả']);
     new MutationObserver(() => { if (!bres.hidden) showLeaf(bp,1,1); }).observe(bres,{attributes:true,attributeFilter:['hidden']});
   }
-  const pv = h('button',{class:'pbtn',id:'pg-prev',type:'button','aria-label':'Trang trước'}, h('span',{'aria-hidden':'true',text:'‹'}), h('i',{text:'Trước'}));
-  const nx = h('button',{class:'pbtn',id:'pg-next',type:'button','aria-label':'Trang sau'}, h('i',{text:'Sau'}), h('span',{'aria-hidden':'true',text:'›'}));
-  const bar = h('nav',{class:'pager','aria-label':'Chuyển trang'}); bar.append(pv, tabsEl, h('span',{class:'pcount',id:'pg-count'}), nx);
-  wrap.append(bar);
-  pv.addEventListener('click', () => goPage(-1)); nx.addEventListener('click', () => goPage(1));
+  const hd = $('header.top'); hd.insertBefore(tabsEl, hd.querySelector('.top-right'));
+  pages.forEach(pg => { if (!pg._leaves) return;
+    const names = pg._names; pg._sub = h('div',{class:'subnav',role:'group','aria-label':'Chuyển phần'});
+    pg._leaves.forEach((l,k) => { const bt = h('button',{type:'button',class:'subbtn',text:names[k]}); bt.addEventListener('click', () => showLeaf(pg,k,k>(pg._li||0)?1:-1)); pg._sub.append(bt); });
+    pg.insertBefore(pg._sub, pg._leaves[0]); });
   document.addEventListener('keydown', e => {
+    return;
     if (e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
     if (e.target.closest && e.target.closest('input,textarea,select,[role=tab],details,[contenteditable]')) return;
     if (e.key==='ArrowRight') goPage(1); else if (e.key==='ArrowLeft') goPage(-1);
